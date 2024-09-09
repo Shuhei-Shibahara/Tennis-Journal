@@ -3,6 +3,8 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+import userRoutes from './routes/userRoutes';
+
 
 dotenv.config(); // Load environment variables from .env file
 
@@ -29,3 +31,6 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+// routes
+app.use('/api/users', userRoutes);
