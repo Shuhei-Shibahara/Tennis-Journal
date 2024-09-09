@@ -8,6 +8,8 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
+const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 dotenv_1.default.config(); // Load environment variables from .env file
 const app = (0, express_1.default)();
 // Middleware
@@ -28,3 +30,6 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+// routes
+app.use('/api/users', userRoutes_1.default);
+app.use('/api/auth', authRoutes_1.default);

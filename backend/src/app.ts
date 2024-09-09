@@ -4,6 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import userRoutes from './routes/userRoutes';
+import authRoutes from './routes/authRoutes';
 
 
 dotenv.config(); // Load environment variables from .env file
@@ -16,10 +17,23 @@ app.use(helmet());
 app.use(express.json());
 
 // Connect to MongoDB
-mongoose
-  .connect(process.env.MONGODB_URI as string)
-  .then(() => console.log('MongoDB connected'))
-  .catch((err) => console.error('MongoDB connection error:', err));
+
+const connectDB = async () => {
+  try {
+    await mongoose.connect('mongodb+srv://<Tennis-Journal>:<AGkEHKNlWrySvUAt>@cluster0.ztmmw.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'); // Replace with your actual connection string
+    console.log('MongoDB connected successfully');
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error('MongoDB connection error:', error.message);
+      process.exit(1); // Exit process with failure
+    } else {
+      console.error('Unexpected error:', error);
+      process.exit(1);
+    }
+  }
+};
+
+connectDB();
 
 // Define a simple route
 app.get('/', (req, res) => {
@@ -34,3 +48,4 @@ app.listen(PORT, () => {
 
 // routes
 app.use('/api/users', userRoutes);
+app.use('/api/auth', authRoutes);
