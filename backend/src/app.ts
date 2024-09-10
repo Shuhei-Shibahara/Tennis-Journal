@@ -20,7 +20,7 @@ app.use(express.json());
 
 const connectDB = async () => {
   try {
-    await mongoose.connect('mongodb+srv://<Tennis-Journal>:<AGkEHKNlWrySvUAt>@cluster0.ztmmw.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'); // Replace with your actual connection string
+    await mongoose.connect('mongodb+srv://Shuhei:4s98QkhAr2IDE54A@tennis-journal.ztmmw.mongodb.net/?retryWrites=true&w=majority&appName=Tennis-Journal'); // Replace with your actual connection string
     console.log('MongoDB connected successfully');
   } catch (error) {
     if (error instanceof Error) {
