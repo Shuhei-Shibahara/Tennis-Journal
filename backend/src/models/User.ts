@@ -5,7 +5,7 @@ export interface IUser extends Document {
   username: string;
   email: string;
   password: string;
-  comparePassword(candidatePassword: string): Promise<boolean>; // Add method signature here
+  comparePassword(candidatePassword: string): Promise<boolean>; 
 }
 
 const UserSchema: Schema<IUser> = new Schema({

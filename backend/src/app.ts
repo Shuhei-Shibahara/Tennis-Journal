@@ -5,6 +5,8 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import userRoutes from './routes/userRoutes';
 import authRoutes from './routes/authRoutes';
+import authMiddleware from './middlewares/authMiddleware';
+
 
 
 dotenv.config(); // Load environment variables from .env file
@@ -15,7 +17,6 @@ const app = express();
 app.use(cors());
 app.use(helmet());
 app.use(express.json());
-
 // Connect to MongoDB
 
 const connectDB = async () => {
@@ -47,5 +48,5 @@ app.listen(PORT, () => {
 });
 
 // routes
-app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/users', authMiddleware, userRoutes);
