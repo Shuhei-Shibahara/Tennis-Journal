@@ -7,18 +7,22 @@ import userRoutes from './routes/userRoutes';
 import authRoutes from './routes/authRoutes';
 import authMiddleware from './middlewares/authMiddleware';
 
-
-
 dotenv.config(); // Load environment variables from .env file
 
 const app = express();
 
+// CORS configuration
+const corsOptions = {
+  origin: 'http://localhost:3000', // Change this to your frontend's URL if different
+  credentials: true, // Allow credentials (e.g., cookies)
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions)); // Use CORS with the specified options
 app.use(helmet());
 app.use(express.json());
-// Connect to MongoDB
 
+// Connect to MongoDB
 const connectDB = async () => {
   try {
     await mongoose.connect('mongodb+srv://Shuhei:4s98QkhAr2IDE54A@tennis-journal.ztmmw.mongodb.net/?retryWrites=true&w=majority&appName=Tennis-Journal'); // Replace with your actual connection string

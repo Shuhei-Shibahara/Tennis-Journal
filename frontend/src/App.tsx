@@ -1,15 +1,17 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import MainPage from './components/MainPage'; // Adjust the path as needed
+import LoginPage from './components/LoginPage'; // Assuming you have a LoginPage component
 
-function App() {
+const App: React.FC = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-       <div>Tennis Journal</div>
-      </header>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<MainPage />} />
+        <Route path="/login" element={<LoginPage />} /> 
+      </Routes>
+    </Router>
   );
-}
+};
 
 export default App;
