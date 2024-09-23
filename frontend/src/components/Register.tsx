@@ -13,7 +13,11 @@ const Register: React.FC = () => {
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', data); // Replace with your backend URL
+      const response = await axios.post('http://localhost:5000/api/auth/register', data, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
       console.log('User registered:', response.data);
     } catch (error) {
       console.error('Registration error:', error);
