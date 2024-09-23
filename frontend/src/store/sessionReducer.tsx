@@ -3,7 +3,6 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 interface User {
   id: string;
   name: string;
-  // Add other user properties as needed
 }
 
 interface SessionState {

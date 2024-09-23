@@ -1,12 +1,17 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import LoginForm from './LoginForm'; // Import the reusable component
+import LoginForm from './LoginForm';
 
-const Home: React.FC = () => {
+interface HomeProps {
+  onLoginSuccess: () => void; // Define the type for the props
+}
+
+const Home: React.FC<HomeProps> = ({ onLoginSuccess }) => {
   const navigate = useNavigate();
 
   const handleLoginSuccess = () => {
-    navigate('/journal');
+    onLoginSuccess(); // Call the prop function to update logged-in status
+    navigate('/journal'); // Redirect to /journal
   };
 
   return (

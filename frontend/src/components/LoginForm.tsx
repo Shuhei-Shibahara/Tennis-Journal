@@ -3,8 +3,8 @@ import { useForm } from 'react-hook-form';
 import axios from 'axios';
 
 interface LoginFormData {
-  email: string; // Only email is required
-  password: string; // Password is required
+  email: string;
+  password: string;
 }
 
 interface LoginFormProps {
@@ -34,8 +34,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
       <div className="mb-4">
         <label className="block text-gray-700 text-sm font-bold mb-2">Email</label>
         <input
-          type="email" // Specify input type as email
-          {...register('email', { required: true })} // Register email field
+          type="email"
+          {...register('email', { required: true })}
           className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="Enter your email"
         />
