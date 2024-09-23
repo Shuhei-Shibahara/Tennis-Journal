@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IJournal extends Document {
-  userId: mongoose.Types.ObjectId; // Reference to the User model
+  userId: mongoose.Types.ObjectId; 
   date: Date;
   opponent: string;
   tournamentName: string;
@@ -9,7 +9,7 @@ export interface IJournal extends Document {
   courtSurface: string;
   strengths: string;
   weaknesses: string;
-  lessonsLearned: string; // Renamed for clarity
+  lessonsLearned: string; 
 }
 
 const journalSchema = new Schema<IJournal>({

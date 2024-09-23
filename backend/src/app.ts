@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import userRoutes from './routes/userRoutes';
 import authRoutes from './routes/authRoutes';
 import authMiddleware from './middlewares/authMiddleware';
+import journalRoutes from './routes/journalRoutes'
 
 dotenv.config(); // Load environment variables from .env file
 
@@ -54,3 +55,4 @@ app.listen(PORT, () => {
 // routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', authMiddleware, userRoutes);
+app.use('/api/journals', authMiddleware, journalRoutes)
