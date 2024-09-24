@@ -24,7 +24,6 @@ export const register = async (req: Request, res: Response) => {
   }
 };
 
-// Login a user
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
@@ -38,10 +37,10 @@ export const login = async (req: Request, res: Response) => {
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
     // Generate token
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET as string, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET as string, { expiresIn: '1h' });
 
-    // Send the token
-    res.json({ token });
+    // Send the token and user info
+    res.json({ token, user: { id: user._id, username: user.username } });
   } catch (error) {
     console.error('Error logging in:', error instanceof Error ? error.message : error);
     res.status(500).json({ message: 'Error logging in' });

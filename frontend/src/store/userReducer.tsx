@@ -2,12 +2,12 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface UserState {
   id: string | null;
-  name: string | null;
+  username: string | null; // Update to username
 }
 
 const initialState: UserState = {
   id: null,
-  name: null,
+  username: null, // Set initial state for username
 };
 
 const userSlice = createSlice({
@@ -16,11 +16,11 @@ const userSlice = createSlice({
   reducers: {
     login: (state, action: PayloadAction<UserState>) => {
       state.id = action.payload.id;
-      state.name = action.payload.name;
+      state.username = action.payload.username; // Use username from payload
     },
     logout: (state) => {
       state.id = null;
-      state.name = null;
+      state.username = null; // Reset username on logout
     },
   },
 });

@@ -1,6 +1,8 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
+import { useDispatch } from 'react-redux';
+import { login } from '../store/sessionReducer'; // Adjust the import path as needed
 
 interface LoginFormData {
   email: string;
@@ -12,6 +14,7 @@ interface LoginFormProps {
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
+  const dispatch = useDispatch();
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>();
 
   const onSubmit = async (data: LoginFormData) => {
@@ -21,8 +24,14 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
           'Content-Type': 'application/json'
         }
       });
-      console.log('User logged in:', response.data);
-      localStorage.setItem('token', response.data.token); // Store JWT token
+
+      const { user, token } = response.data; // Assuming your backend sends back user info and token
+
+      localStorage.setItem('token', token); // Store JWT token
+
+      // Dispatch login action with user data and token
+      dispatch(login({ user, token }));
+
       onLoginSuccess(); // Callback after successful login
     } catch (error) {
       console.error('Login error:', error);

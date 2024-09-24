@@ -13,36 +13,47 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.login = exports.register = void 0;
+const mongoose_1 = __importDefault(require("mongoose")); // Add this import at the top
 const User_1 = __importDefault(require("../models/User"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const bcrypt_1 = __importDefault(require("bcrypt"));
 // Register a new user
 const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { username, email, password } = req.body;
-        const newUser = new User_1.default({ username, email, password });
+        const newUser = new User_1.default({ username, email, password }); // No manual hashing here
         const savedUser = yield newUser.save();
         res.status(201).json(savedUser);
+        console.log('New user created:', savedUser);
     }
     catch (error) {
-        res.status(500).json({ message: 'Error registering user', error });
+        if (error instanceof mongoose_1.default.Error.ValidationError) {
+            return res.status(400).json({ message: 'Validation error', errors: error.errors });
+        }
+        console.error(error);
+        res.status(500).json({ message: 'Error registering user', error: error.message });
     }
 });
 exports.register = register;
-// Login a user
 const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email, password } = req.body;
+        // Find user by email
         const user = yield User_1.default.findOne({ email });
         if (!user)
             return res.status(404).json({ message: 'User not found' });
-        const isMatch = yield user.comparePassword(password);
+        // Compare password with the stored hashed password
+        const isMatch = yield bcrypt_1.default.compare(password, user.password);
         if (!isMatch)
             return res.status(400).json({ message: 'Invalid credentials' });
-        const token = jsonwebtoken_1.default.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.json({ token });
+        // Generate token
+        const token = jsonwebtoken_1.default.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        // Send the token and user info
+        res.json({ token, user: { id: user._id, username: user.username } });
     }
     catch (error) {
-        res.status(500).json({ message: 'Error logging in', error });
+        console.error('Error logging in:', error instanceof Error ? error.message : error);
+        res.status(500).json({ message: 'Error logging in' });
     }
 });
 exports.login = login;
