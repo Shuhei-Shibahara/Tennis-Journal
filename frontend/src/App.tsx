@@ -1,12 +1,13 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import Home from './components/Home';
 import Register from './components/Register';
 import Login from './components/Login';
 import Journal from './components/Journal';
 import Navbar from './components/Navbar';
-import { logout } from './store/sessionReducer';
+import { login, logout } from './store/sessionReducer';
+import axios from 'axios';
 import { RootState } from './store';
 import './index.css';
 
@@ -19,10 +20,22 @@ const App: React.FC = () => {
 
     const fetchUser = async () => {
       if (token) {
-        console.log('am here')
+        const decodedToken = JSON.parse(atob(token.split('.')[1]));
+        console.log(decodedToken)
+        const userId = decodedToken.id;
+
+        try {
+          const response = await axios.get(`http://localhost:5000/api/users/${userId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          dispatch(login({ user: response.data, token }));
+        } catch (error) {
+          console.error('Failed to fetch user', error);
+          dispatch(logout());
+        }
       } else {
         dispatch(logout());
-        console.log('logged out')
       }
     };
 
@@ -31,7 +44,6 @@ const App: React.FC = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    console.log('logging out now')
     dispatch(logout());
   };
 
