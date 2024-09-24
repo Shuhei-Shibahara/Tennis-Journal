@@ -4,7 +4,7 @@ import { createJournalEntry,getJournalEntries, getJournalEntryById, updateJourna
 const router = express.Router();
 
 router.post('/', createJournalEntry); // Create a new entry
-router.get('/:userId', getJournalEntries); // Get all entries for a user
+router.get('/user/:userId', getJournalEntries); // Get all entries for a user
 router.get('/:id', getJournalEntryById); // Get a specific entry by ID
 router.put('/:id', updateJournalEntry); // Update an entry by ID
 router.delete('/:id', deleteJournalEntry); // Delete an entry by ID

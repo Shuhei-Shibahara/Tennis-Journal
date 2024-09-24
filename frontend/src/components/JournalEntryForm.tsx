@@ -1,6 +1,8 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store'; // Adjust the path as needed
 
 interface IJournalEntry {
   date: string;
@@ -14,20 +16,30 @@ interface IJournalEntry {
 }
 
 const JournalEntryForm: React.FC = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm<IJournalEntry>();
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<IJournalEntry>();
+  const user = useSelector((state: RootState) => state.session.user);
 
   const onSubmit = async (data: IJournalEntry) => {
     try {
-      const userId = localStorage.getItem('userId'); // Assume userId is stored in localStorage after login
+      const userId = user?.id;
+      console.log('User ID from Redux:', userId);
+
+      if (!userId) {
+        alert('User ID is missing. Please log in again.');
+        return;
+      }
+
       await axios.post('http://localhost:5000/api/journals', { ...data, userId }, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}` // Assuming the token is stored in localStorage
+          Authorization: `Bearer ${localStorage.getItem('token')}`
         }
       });
-      // Handle success (e.g., show a success message or reset the form)
+
+      alert('Journal entry submitted successfully!');
+      reset(); // Clear the form fields
     } catch (error) {
       console.error('Error submitting journal entry:', error);
-      // Handle error (e.g., show an error message)
+      alert('Failed to submit journal entry. Please try again.');
     }
   };
 

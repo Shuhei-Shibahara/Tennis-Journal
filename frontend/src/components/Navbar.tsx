@@ -1,32 +1,38 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { RootState } from '../store'; // Ensure this is the correct path to your store types
+import { Link } from 'react-router-dom';
 
+interface NavbarProps {
+  isLoggedIn: boolean;
+  onLogout: () => void;
+}
 
-const Navbar: React.FC<{ isLoggedIn: boolean; onLogout: () => void }> = ({ isLoggedIn, onLogout }) => {
-  const navigate = useNavigate();
-
-  const user = useSelector((state: RootState) => state.session.user);
-  console.log('Current session state:', user);
-
-  const handleLogout = () => {
-    localStorage.removeItem('token'); // Remove the token from local storage
-    onLogout(); // Call the logout function passed as a prop
-    navigate('/'); // Redirect to the homepage or login page after logout
-  };
-
+const Navbar: React.FC<NavbarProps> = ({ isLoggedIn, onLogout }) => {
   return (
-    <nav className="bg-blue-600 p-4 text-white flex justify-between items-center">
-      <h1 className="text-xl font-bold">{isLoggedIn ? `Hello, ${user?.username}` : 'My App'}</h1>
-      {isLoggedIn && (
-        <button
-          onClick={handleLogout}
-          className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded"
-        >
-          Logout
-        </button>
-      )}
+    <nav className="bg-gray-800 p-4">
+      <ul className="flex space-x-4">
+        <li>
+          <Link to="/" className="text-white">Home</Link>
+        </li>
+        {isLoggedIn ? (
+          <>
+            <li>
+              <Link to="/journal" className="text-white">Journal</Link>
+            </li>
+            <li>
+              <button onClick={onLogout} className="text-white">Logout</button>
+            </li>
+          </>
+        ) : (
+          <>
+            <li>
+              <Link to="/login" className="text-white">Login</Link>
+            </li>
+            <li>
+              <Link to="/register" className="text-white">Register</Link>
+            </li>
+          </>
+        )}
+      </ul>
     </nav>
   );
 };

@@ -9,11 +9,7 @@ interface LoginFormData {
   password: string;
 }
 
-interface LoginFormProps {
-  onLoginSuccess: () => void;
-}
-
-const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
+const LoginForm: React.FC = () => {
   const dispatch = useDispatch();
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>();
 
@@ -32,7 +28,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLoginSuccess }) => {
       // Dispatch login action with user data and token
       dispatch(login({ user, token }));
 
-      onLoginSuccess(); // Callback after successful login
+      // No need to call onLoginSuccess, as navigation is handled in Login.tsx
     } catch (error) {
       console.error('Login error:', error);
     }

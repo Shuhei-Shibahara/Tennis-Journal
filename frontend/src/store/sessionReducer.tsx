@@ -22,11 +22,13 @@ const sessionSlice = createSlice({
   initialState,
   reducers: {
     login(state, action: PayloadAction<{ user: User; token: string }>) {
+      console.log('Logging in user:', action.payload.user); // Log user details
       state.user = action.payload.user; // Store user info
       state.token = action.payload.token; // Store the token
       state.isLoggedIn = true;
     },
     logout(state) {
+      console.log('Logging out user'); // Log logout action
       state.user = null;
       state.token = null; // Clear token on logout
       state.isLoggedIn = false;
