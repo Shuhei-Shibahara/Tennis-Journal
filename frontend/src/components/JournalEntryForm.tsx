@@ -18,11 +18,12 @@ interface IJournalEntry {
 const JournalEntryForm: React.FC = () => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm<IJournalEntry>();
   const user = useSelector((state: RootState) => state.session.user);
+  console.log('User ID from Redux:', user);
 
   const onSubmit = async (data: IJournalEntry) => {
     try {
-      const userId = user?.id;
-      console.log('User ID from Redux:', userId);
+      const userId = user?._id;
+      console.log('hello from onsubmit', userId)
 
       if (!userId) {
         alert('User ID is missing. Please log in again.');

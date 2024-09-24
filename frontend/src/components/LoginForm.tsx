@@ -2,6 +2,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import { login } from '../store/sessionReducer'; // Adjust the import path as needed
 
 interface LoginFormData {
@@ -11,14 +12,15 @@ interface LoginFormData {
 
 const LoginForm: React.FC = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate(); // Initialize useNavigate
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>();
 
   const onSubmit = async (data: LoginFormData) => {
     try {
       const response = await axios.post('http://localhost:5000/api/auth/login', data, {
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
 
       const { user, token } = response.data; // Assuming your backend sends back user info and token
@@ -28,7 +30,8 @@ const LoginForm: React.FC = () => {
       // Dispatch login action with user data and token
       dispatch(login({ user, token }));
 
-      // No need to call onLoginSuccess, as navigation is handled in Login.tsx
+      // Navigate to /journal after successful login
+      navigate('/journal');
     } catch (error) {
       console.error('Login error:', error);
     }
