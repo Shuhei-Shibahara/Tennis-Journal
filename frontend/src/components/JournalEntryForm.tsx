@@ -2,7 +2,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
-import { RootState } from '../store'; // Adjust the path as needed
+import { RootState } from '../store'; 
 
 interface IJournalEntry {
   date: string;
@@ -37,7 +37,7 @@ const JournalEntryForm: React.FC = () => {
       });
 
       alert('Journal entry submitted successfully!');
-      reset(); // Clear the form fields
+      reset(); 
     } catch (error) {
       console.error('Error submitting journal entry:', error);
       alert('Failed to submit journal entry. Please try again.');

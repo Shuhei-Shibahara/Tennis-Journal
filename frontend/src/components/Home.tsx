@@ -13,7 +13,7 @@ const Home: React.FC = () => {
         <img src="/path-to-your-keyhole-image.png" alt="Keyhole" className="w-20 h-20" />
       </div>
 
-      <LoginForm /> {/* No need to pass onLoginSuccess anymore */}
+      <LoginForm /> 
     </div>
   );
 };

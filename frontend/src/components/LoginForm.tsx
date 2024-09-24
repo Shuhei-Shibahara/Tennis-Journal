@@ -2,8 +2,8 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import { login } from '../store/sessionReducer'; // Adjust the import path as needed
+import { useNavigate } from 'react-router-dom'; 
+import { login } from '../store/sessionReducer'; 
 
 interface LoginFormData {
   email: string;
@@ -12,7 +12,7 @@ interface LoginFormData {
 
 const LoginForm: React.FC = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate(); 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>();
 
   const onSubmit = async (data: LoginFormData) => {
@@ -23,14 +23,12 @@ const LoginForm: React.FC = () => {
         },
       });
 
-      const { user, token } = response.data; // Assuming your backend sends back user info and token
+      const { user, token } = response.data; 
 
-      localStorage.setItem('token', token); // Store JWT token
+      localStorage.setItem('token', token); 
 
-      // Dispatch login action with user data and token
       dispatch(login({ user, token }));
 
-      // Navigate to /journal after successful login
       navigate('/journal');
     } catch (error) {
       console.error('Login error:', error);
