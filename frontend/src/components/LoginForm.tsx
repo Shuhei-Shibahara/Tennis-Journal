@@ -24,7 +24,7 @@ const LoginForm: React.FC = () => {
       });
 
       const { user, token } = response.data; 
-
+      console.log(user,token)
       localStorage.setItem('token', token); 
 
       dispatch(login({ user, token }));

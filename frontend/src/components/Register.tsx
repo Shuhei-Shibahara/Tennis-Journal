@@ -1,6 +1,9 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom'; 
+import { useDispatch } from 'react-redux'; // Import useDispatch
+import { login } from '../store/sessionReducer'; 
 
 interface RegisterFormData {
   username: string;
@@ -10,6 +13,8 @@ interface RegisterFormData {
 
 const Register: React.FC = () => {
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>();
+  const navigate = useNavigate(); 
+  const dispatch =useDispatch();
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
@@ -19,8 +24,14 @@ const Register: React.FC = () => {
         }
       });
       console.log('User registered:', response.data);
+      
+      const { user, token } = response.data;
+
+      dispatch(login({ user, token }));
+
+      navigate('/journal');
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error('Error during registration or login:', error);
     }
   };
 

@@ -18,22 +18,31 @@ const User_1 = __importDefault(require("../models/User"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 // Register a new user
-const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const register = async (req, res) => {
     try {
         const { username, email, password } = req.body;
-        const newUser = new User_1.default({ username, email, password }); // No manual hashing here
-        const savedUser = yield newUser.save();
-        res.status(201).json(savedUser);
+
+        // Create a new user without manual hashing (assuming mongoose handles it)
+        const newUser = new User({ username, email, password });
+        const savedUser = await newUser.save();
+
+        // Generate token after saving the user
+        const token = jwt.sign(
+            { id: savedUser._id, username: savedUser.username },
+            process.env.JWT_SECRET, 
+            { expiresIn: '1h' }
+        );
+
+        res.status(201).json({ token, user: { id: savedUser._id, username: savedUser.username } });
         console.log('New user created:', savedUser);
-    }
-    catch (error) {
-        if (error instanceof mongoose_1.default.Error.ValidationError) {
+    } catch (error) {
+        if (error instanceof mongoose.Error.ValidationError) {
             return res.status(400).json({ message: 'Validation error', errors: error.errors });
         }
         console.error(error);
         res.status(500).json({ message: 'Error registering user', error: error.message });
     }
-});
+};
 exports.register = register;
 const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
