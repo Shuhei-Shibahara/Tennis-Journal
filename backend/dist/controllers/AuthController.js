@@ -13,36 +13,36 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.login = exports.register = void 0;
-const mongoose_1 = __importDefault(require("mongoose")); 
+const mongoose_1 = __importDefault(require("mongoose")); // Add this import at the top
 const User_1 = __importDefault(require("../models/User"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 // Register a new user
-const register = async (req, res) => {
+const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { username, email, password } = req.body;
 
-        // Create a new user without manual hashing (assuming mongoose handles it)
-        const newUser = new User({ username, email, password });
-        const savedUser = await newUser.save();
+        // Hash the password before saving
+        const hashedPassword = yield bcrypt_1.default.hash(password, 10);
 
-        // Generate token after saving the user
-        const token = jwt.sign(
-            { id: savedUser._id, username: savedUser.username },
-            process.env.JWT_SECRET, 
-            { expiresIn: '1h' }
-        );
+        const newUser = new User_1.default({ username, email, password: hashedPassword });
+        const savedUser = yield newUser.save();
 
-        res.status(201).json({ token, user: { id: savedUser._id, username: savedUser.username } });
+        // Generate a token with user ID
+        const token = jsonwebtoken_1.default.sign({ id: savedUser._id, username: savedUser.username }, 'your_jwt_secret_key', { expiresIn: '1h' });
+
+        // Send back the user and token in the response
+        res.status(201).json({ user: savedUser, token });
         console.log('New user created:', savedUser);
-    } catch (error) {
-        if (error instanceof mongoose.Error.ValidationError) {
+    }
+    catch (error) {
+        if (error instanceof mongoose_1.default.Error.ValidationError) {
             return res.status(400).json({ message: 'Validation error', errors: error.errors });
         }
         console.error(error);
         res.status(500).json({ message: 'Error registering user', error: error.message });
     }
-};
+});
 exports.register = register;
 const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {

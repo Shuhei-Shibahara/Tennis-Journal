@@ -2,8 +2,8 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom'; 
-import { login } from '../store/sessionReducer'; 
+import { useNavigate } from 'react-router-dom';
+import { login } from '../store/sessionReducer';
 
 interface LoginFormData {
   email: string;
@@ -12,7 +12,7 @@ interface LoginFormData {
 
 const LoginForm: React.FC = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>();
 
   const onSubmit = async (data: LoginFormData) => {
@@ -23,9 +23,9 @@ const LoginForm: React.FC = () => {
         },
       });
 
-      const { user, token } = response.data; 
-      console.log(user,token)
-      localStorage.setItem('token', token); 
+      const { user, token } = response.data;
+      console.log(user, token);
+      localStorage.setItem('token', token);
 
       dispatch(login({ user, token }));
 

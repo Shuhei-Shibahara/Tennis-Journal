@@ -18,7 +18,7 @@ interface IJournalEntry {
 const JournalEntryForm: React.FC = () => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm<IJournalEntry>();
   const user = useSelector((state: RootState) => state.session.user);
-  console.log('User ID from Redux:', user);
+  console.log('User ID from Redux:', user?._id);
 
   const onSubmit = async (data: IJournalEntry) => {
     try {

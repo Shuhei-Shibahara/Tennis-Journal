@@ -29,7 +29,7 @@ const corsOptions = {
     credentials: true, // Allow credentials (e.g., cookies)
 };
 // Middleware
-app.use((0, cors_1.default)(corsOptions));
+app.use((0, cors_1.default)(corsOptions)); // Use CORS with the specified options
 app.use((0, helmet_1.default)());
 app.use(express_1.default.json());
 // Connect to MongoDB
@@ -41,7 +41,7 @@ const connectDB = () => __awaiter(void 0, void 0, void 0, function* () {
     catch (error) {
         if (error instanceof Error) {
             console.error('MongoDB connection error:', error.message);
-            process.exit(1); 
+            process.exit(1); // Exit process with failure
         }
         else {
             console.error('Unexpected error:', error);
@@ -50,7 +50,7 @@ const connectDB = () => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 connectDB();
-
+// Define a simple route
 app.get('/', (req, res) => {
     res.send('Hello World!');
 });

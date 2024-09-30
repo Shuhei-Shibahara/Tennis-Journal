@@ -7,7 +7,7 @@ const express_1 = __importDefault(require("express"));
 const JournalController_1 = require("../controllers/JournalController");
 const router = express_1.default.Router();
 router.post('/', JournalController_1.createJournalEntry); // Create a new entry
-router.get('/:userId', JournalController_1.getJournalEntries); // Get all entries for a user
+router.get('/user/:userId', JournalController_1.getJournalEntries); // Get all entries for a user
 router.get('/:id', JournalController_1.getJournalEntryById); // Get a specific entry by ID
 router.put('/:id', JournalController_1.updateJournalEntry); // Update an entry by ID
 router.delete('/:id', JournalController_1.deleteJournalEntry); // Delete an entry by ID

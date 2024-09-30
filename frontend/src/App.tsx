@@ -12,33 +12,53 @@ import { RootState } from './store';
 import './index.css';
 
 const App: React.FC = () => {
-  const [loading, setLoading] = useState(true); // Loading state, but we won't display anything for it
+  const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
   const isLoggedIn = useSelector((state: RootState) => state.session.isLoggedIn);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-
     const fetchUser = async () => {
-      if (token) {
-        const decodedToken = JSON.parse(atob(token.split('.')[1]));
-        console.log(decodedToken);
-        const userId = decodedToken.id;
+      const token = localStorage.getItem('token');
 
-        try {
-          const response = await axios.get(`http://localhost:5000/api/users/${userId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-
-          dispatch(login({ user: response.data, token }));
-        } catch (error) {
-          console.error('Failed to fetch user', error);
-          dispatch(logout());
-        }
-      } else {
+      if (!token) {
+        console.log('No token found, logging out');
         dispatch(logout());
+        setLoading(false);
+        return;
       }
-      setLoading(false); // Set loading to false once token/user check is done
+
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        console.error('Invalid JWT format:', token);
+        dispatch(logout());
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const decodedToken = JSON.parse(atob(parts[1]));
+        console.log('Decoded token:', decodedToken);
+
+        const userId = decodedToken.id; // Ensure this matches your login/registration response
+        if (!userId) {
+          console.error('User ID not found in token:', decodedToken);
+          dispatch(logout());
+          setLoading(false);
+          return;
+        }
+
+        const response = await axios.get(`http://localhost:5000/api/users/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        console.log('User data fetched:', response.data);
+        dispatch(login({ user: response.data, token }));
+      } catch (error) {
+        console.error('Error fetching user:', error);
+        dispatch(logout());
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchUser();
@@ -49,9 +69,8 @@ const App: React.FC = () => {
     dispatch(logout());
   };
 
-  // Don't render anything until the token/user check is finished
   if (loading) {
-    return null; // Return nothing while loading
+    return <div>Loading...</div>; // Display a loading message
   }
 
   return (
