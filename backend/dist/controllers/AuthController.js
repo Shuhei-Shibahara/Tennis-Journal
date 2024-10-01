@@ -21,18 +21,9 @@ const bcrypt_1 = __importDefault(require("bcrypt"));
 const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { username, email, password } = req.body;
-
-        // Hash the password before saving
-        const hashedPassword = yield bcrypt_1.default.hash(password, 10);
-
-        const newUser = new User_1.default({ username, email, password: hashedPassword });
+        const newUser = new User_1.default({ username, email, password }); // No manual hashing here
         const savedUser = yield newUser.save();
-
-        // Generate a token with user ID
-        const token = jsonwebtoken_1.default.sign({ id: savedUser._id, username: savedUser.username }, 'your_jwt_secret_key', { expiresIn: '1h' });
-
-        // Send back the user and token in the response
-        res.status(201).json({ user: savedUser, token });
+        res.status(201).json(savedUser);
         console.log('New user created:', savedUser);
     }
     catch (error) {

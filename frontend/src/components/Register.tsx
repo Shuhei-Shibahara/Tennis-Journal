@@ -1,9 +1,6 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { login } from '../store/sessionReducer';
 
 interface RegisterFormData {
   username: string;
@@ -13,8 +10,6 @@ interface RegisterFormData {
 
 const Register: React.FC = () => {
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>();
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
@@ -23,12 +18,7 @@ const Register: React.FC = () => {
           'Content-Type': 'application/json',
         },
       });
-      const { user, token } = response.data; // Assuming backend returns token & user
-      console.log(user, token);
-      // Store token and dispatch login action
-      localStorage.setItem('token', token);
-      dispatch(login({ user, token })); // Use the login action
-      navigate('/journal'); // Redirect to the journal page
+      console.log('User registered:', response.data);
     } catch (error) {
       console.error('Registration error:', error);
     }
