@@ -1,6 +1,9 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { login } from '../store/sessionReducer'; // Assuming you have a login action in your session reducer
 
 interface RegisterFormData {
   username: string;
@@ -9,18 +12,42 @@ interface RegisterFormData {
 }
 
 const Register: React.FC = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>();
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', data, {
+      // Register the user
+      const registerResponse = await axios.post('http://localhost:5000/api/auth/register', data, {
         headers: {
           'Content-Type': 'application/json',
         },
       });
-      console.log('User registered:', response.data);
+      console.log('User registered:', registerResponse.data);
+
+      // Automatically log in the user after registration
+      const loginResponse = await axios.post('http://localhost:5000/api/auth/login', {
+        email: data.email,
+        password: data.password
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const { user, token } = loginResponse.data;
+
+      // Store the token in localStorage
+      localStorage.setItem('token', token);
+
+      // Dispatch login action to store user info in Redux state
+      dispatch(login({ user, token }));
+
+      // Navigate to /journal page
+      navigate('/journal');
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error('Registration/Login error:', error);
     }
   };
 
