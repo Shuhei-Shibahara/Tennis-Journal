@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import Home from './components/Home';
@@ -14,14 +14,12 @@ import './index.css';
 const App: React.FC = () => {
   const dispatch = useDispatch();
   const isLoggedIn = useSelector((state: RootState) => state.session.isLoggedIn);
+  const [loading, setLoading] = useState(true); // Initialize loading state
 
   useEffect(() => {
-    const fetchUser = async () => {
-      if (token) {
-        const decodedToken = JSON.parse(atob(token.split('.')[1]));
-        console.log(decodedToken)
-        const userId = decodedToken.id;
+    const token = localStorage.getItem('token'); // Retrieve token from localStorage
 
+    const fetchUser = async () => {
       if (!token) {
         console.log('No token found, logging out');
         dispatch(logout());
@@ -70,6 +68,10 @@ const App: React.FC = () => {
     localStorage.removeItem('token');
     dispatch(logout());
   };
+
+  if (loading) {
+    return <div>Loading...</div>; // Show a loading indicator while fetching user data
+  }
 
   return (
     <Router>

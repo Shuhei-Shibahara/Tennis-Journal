@@ -23,15 +23,20 @@ const LoginForm: React.FC = () => {
         },
       });
 
-      const { user, token } = response.data; 
+      const { user, token } = response.data;
 
-      localStorage.setItem('token', token); 
+      localStorage.setItem('token', token);
 
       dispatch(login({ user, token }));
 
       navigate('/journal');
     } catch (error) {
-      console.error('Login error:', error);
+      if (axios.isAxiosError(error)) {
+        // Log error details from backend response
+        console.error('Login error:', error.response?.data || error.message);
+      } else {
+        console.error('An unexpected error occurred:', error);
+      }
     }
   };
 
