@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../store/sessionReducer'; // Assuming you have a login action in your session reducer
+import { login, logout } from '../store/sessionReducer'; // Assuming you have a login action in your session reducer
 
 interface RegisterFormData {
   username: string;
@@ -43,6 +43,32 @@ const Register: React.FC = () => {
 
       // Dispatch login action to store user info in Redux state
       dispatch(login({ user, token }));
+
+      // Fetch user data after logging in
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        console.error('Invalid JWT format:', token);
+        dispatch(logout());
+        return;
+      }
+
+      const decodedToken = JSON.parse(atob(parts[1]));
+      console.log('Decoded token:', decodedToken);
+
+      const userId = decodedToken.id; // Ensure this matches your login/registration response
+      if (!userId) {
+        console.error('User ID not found in token:', decodedToken);
+        dispatch(logout());
+        return;
+      }
+
+      // Fetch user data
+      const userResponse = await axios.get(`http://localhost:5000/api/users/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log('User data fetched:', userResponse.data);
+      dispatch(login({ user: userResponse.data, token }));
 
       // Navigate to /journal page
       navigate('/journal');

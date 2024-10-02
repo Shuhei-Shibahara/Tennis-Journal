@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../store/sessionReducer';
+import { login, logout } from '../store/sessionReducer';
 
 interface LoginFormData {
   email: string;
@@ -25,14 +25,42 @@ const LoginForm: React.FC = () => {
 
       const { user, token } = response.data;
 
+      // Store token in localStorage
       localStorage.setItem('token', token);
 
+      // Dispatch login action with user and token
       dispatch(login({ user, token }));
 
+      // Fetch user data after logging in
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        console.error('Invalid JWT format:', token);
+        dispatch(logout());
+        return;
+      }
+
+      const decodedToken = JSON.parse(atob(parts[1]));
+      console.log('Decoded token:', decodedToken);
+
+      const userId = decodedToken.id; // Ensure this matches your login/registration response
+      if (!userId) {
+        console.error('User ID not found in token:', decodedToken);
+        dispatch(logout());
+        return;
+      }
+
+      // Fetch user data
+      const userResponse = await axios.get(`http://localhost:5000/api/users/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log('User data fetched:', userResponse.data);
+      dispatch(login({ user: userResponse.data, token }));
+
+      // Redirect to journal page after fetching user data
       navigate('/journal');
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        // Log error details from backend response
         console.error('Login error:', error.response?.data || error.message);
       } else {
         console.error('An unexpected error occurred:', error);
