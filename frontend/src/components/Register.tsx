@@ -3,7 +3,8 @@ import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { login, logout } from '../store/sessionReducer'; // Assuming you have a login action in your session reducer
+import { login } from '../store/sessionReducer';
+import { fetchUserData } from '../utils/authUtils'; // Import the utility function
 
 interface RegisterFormData {
   username: string;
@@ -18,59 +19,26 @@ const Register: React.FC = () => {
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
-      // Register the user
       const registerResponse = await axios.post('http://localhost:5000/api/auth/register', data, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
       });
       console.log('User registered:', registerResponse.data);
 
-      // Automatically log in the user after registration
       const loginResponse = await axios.post('http://localhost:5000/api/auth/login', {
         email: data.email,
-        password: data.password
+        password: data.password,
       }, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
       });
 
       const { user, token } = loginResponse.data;
 
-      // Store the token in localStorage
       localStorage.setItem('token', token);
-
-      // Dispatch login action to store user info in Redux state
       dispatch(login({ user, token }));
 
-      // Fetch user data after logging in
-      const parts = token.split('.');
-      if (parts.length !== 3) {
-        console.error('Invalid JWT format:', token);
-        dispatch(logout());
-        return;
-      }
-
-      const decodedToken = JSON.parse(atob(parts[1]));
-      console.log('Decoded token:', decodedToken);
-
-      const userId = decodedToken.id; // Ensure this matches your login/registration response
-      if (!userId) {
-        console.error('User ID not found in token:', decodedToken);
-        dispatch(logout());
-        return;
-      }
-
       // Fetch user data
-      const userResponse = await axios.get(`http://localhost:5000/api/users/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await fetchUserData(token, dispatch);
 
-      console.log('User data fetched:', userResponse.data);
-      dispatch(login({ user: userResponse.data, token }));
-
-      // Navigate to /journal page
       navigate('/journal');
     } catch (error) {
       console.error('Registration/Login error:', error);

@@ -1,9 +1,11 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import axios from 'axios';
 import { useDispatch } from 'react-redux';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { login, logout } from '../store/sessionReducer';
+import { login } from '../store/sessionReducer';
+import { fetchUserData } from '../utils/authUtils'; // Import the utility function
+
 
 interface LoginFormData {
   email: string;
@@ -18,53 +20,20 @@ const LoginForm: React.FC = () => {
   const onSubmit = async (data: LoginFormData) => {
     try {
       const response = await axios.post('http://localhost:5000/api/auth/login', data, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
       });
 
       const { user, token } = response.data;
 
-      // Store token in localStorage
       localStorage.setItem('token', token);
-
-      // Dispatch login action with user and token
       dispatch(login({ user, token }));
 
-      // Fetch user data after logging in
-      const parts = token.split('.');
-      if (parts.length !== 3) {
-        console.error('Invalid JWT format:', token);
-        dispatch(logout());
-        return;
-      }
-
-      const decodedToken = JSON.parse(atob(parts[1]));
-      console.log('Decoded token:', decodedToken);
-
-      const userId = decodedToken.id; // Ensure this matches your login/registration response
-      if (!userId) {
-        console.error('User ID not found in token:', decodedToken);
-        dispatch(logout());
-        return;
-      }
-
       // Fetch user data
-      const userResponse = await axios.get(`http://localhost:5000/api/users/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await fetchUserData(token, dispatch);
 
-      console.log('User data fetched:', userResponse.data);
-      dispatch(login({ user: userResponse.data, token }));
-
-      // Redirect to journal page after fetching user data
       navigate('/journal');
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error('Login error:', error.response?.data || error.message);
-      } else {
-        console.error('An unexpected error occurred:', error);
-      }
+      console.error('Login error:', error);
     }
   };
 
