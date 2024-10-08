@@ -2,8 +2,8 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
-import { RootState } from '../store'; 
-
+import { RootState } from '../store';
+import { LoadScript, GoogleMap, Marker } from '@react-google-maps/api'; // Import Google Maps components
 interface IJournalEntry {
   date: string;
   opponent: string;
@@ -14,16 +14,24 @@ interface IJournalEntry {
   weaknesses: string;
   lessonsLearned: string;
 }
+const containerStyle = {
+  width: '100%',
+  height: '400px',
+};
 
+const mapCenter = {
+  lat: 34.0522,  // Default latitude (e.g., Los Angeles)
+  lng: -118.2437,  // Default longitude (e.g., Los Angeles)
+};
 const JournalEntryForm: React.FC = () => {
   const { register, handleSubmit, formState: { errors }, reset } = useForm<IJournalEntry>();
   const user = useSelector((state: RootState) => state.session.user);
-  console.log('User ID from Redux:', user?._id);
+  const [location, setLocation] = React.useState(mapCenter); // Map location state
 
   const onSubmit = async (data: IJournalEntry) => {
     try {
       const userId = user?._id;
-      console.log('hello from onsubmit', userId)
+      console.log('hello from onsubmit', userId);
 
       if (!userId) {
         alert('User ID is missing. Please log in again.');
@@ -32,12 +40,12 @@ const JournalEntryForm: React.FC = () => {
 
       await axios.post('http://localhost:5000/api/journals', { ...data, userId }, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
       });
 
       alert('Journal entry submitted successfully!');
-      reset(); 
+      reset();
     } catch (error) {
       console.error('Error submitting journal entry:', error);
       alert('Failed to submit journal entry. Please try again.');
@@ -79,6 +87,16 @@ const JournalEntryForm: React.FC = () => {
           />
           {errors.tournamentName && <span className="text-red-500 text-sm">This field is required</span>}
         </div>
+        {/* Google Maps Integration */}
+        <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY || ''}>
+          <GoogleMap
+            mapContainerStyle={containerStyle}
+            center={location}
+            zoom={10}
+          >
+            <Marker position={location} />
+          </GoogleMap>
+        </LoadScript>
 
         <div>
           <label className="block mb-1" htmlFor="location">Location</label>
@@ -87,6 +105,9 @@ const JournalEntryForm: React.FC = () => {
             {...register('location', { required: true })}
             placeholder="Location"
             className={`w-full p-2 border ${errors.location ? 'border-red-500' : 'border-gray-300'} rounded`}
+            onBlur={(e) => {
+              setLocation({ lat: 34.0522, lng: -118.2437 }); 
+            }}
           />
           {errors.location && <span className="text-red-500 text-sm">This field is required</span>}
         </div>
