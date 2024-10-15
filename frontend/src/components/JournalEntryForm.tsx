@@ -31,6 +31,8 @@ const JournalEntryForm: React.FC = () => {
   const user = useSelector((state: RootState) => state.session.user);
   const [location, setLocation] = React.useState(mapCenter); // Map location state
   const [searchBox, setSearchBox] = React.useState<google.maps.places.SearchBox | null>(null); // State for search box
+  const [placeId, setPlaceId] = React.useState<string | null>(null); // State to store the place ID
+  const [reviews, setReviews] = React.useState<Array<google.maps.places.PlaceReview>>([]); // State for reviews
 
   const onSubmit: SubmitHandler<IJournalEntry> = async (data) => {
     try {
@@ -62,8 +64,26 @@ const JournalEntryForm: React.FC = () => {
       const lng = place.geometry.location?.lng() ?? -118.2437; // Default longitude
       setLocation({ lat, lng }); // Set map location
       setValue('location', place.formatted_address || ''); // Set the value of the location field
+      setPlaceId(place.place_id || null); // Save the place ID for fetching reviews
     }
   };
+
+  // useEffect to fetch reviews once a place is selected
+  React.useEffect(() => {
+    if (placeId) {
+      const service = new google.maps.places.PlacesService(document.createElement('div'));
+      service.getDetails(
+        { placeId },
+        (placeDetails) => {
+          if (placeDetails && placeDetails.reviews) {
+            setReviews(placeDetails.reviews); // Set the reviews in state
+          } else {
+            setReviews([]); // Clear reviews if none found
+          }
+        }
+      );
+    }
+  }, [placeId]);
 
   return (
     <LoadScript
@@ -106,6 +126,50 @@ const JournalEntryForm: React.FC = () => {
           </div>
 
           <div>
+            <label className="block mb-1" htmlFor="courtSurface">Court Surface</label>
+            <input
+              type="text"
+              {...register('courtSurface', { required: true })}
+              placeholder="Court Surface"
+              className={`w-full p-2 border ${errors.courtSurface ? 'border-red-500' : 'border-gray-300'} rounded`}
+            />
+            {errors.courtSurface && <span className="text-red-500 text-sm">This field is required</span>}
+          </div>
+
+          <div>
+            <label className="block mb-1" htmlFor="strengths">Strengths</label>
+            <input
+              type="text"
+              {...register('strengths', { required: true })}
+              placeholder="Strengths"
+              className={`w-full p-2 border ${errors.strengths ? 'border-red-500' : 'border-gray-300'} rounded`}
+            />
+            {errors.strengths && <span className="text-red-500 text-sm">This field is required</span>}
+          </div>
+
+          <div>
+            <label className="block mb-1" htmlFor="weaknesses">Weaknesses</label>
+            <input
+              type="text"
+              {...register('weaknesses', { required: true })}
+              placeholder="Weaknesses"
+              className={`w-full p-2 border ${errors.weaknesses ? 'border-red-500' : 'border-gray-300'} rounded`}
+            />
+            {errors.weaknesses && <span className="text-red-500 text-sm">This field is required</span>}
+          </div>
+
+          <div>
+            <label className="block mb-1" htmlFor="lessonsLearned">Lessons Learned</label>
+            <input
+              type="text"
+              {...register('lessonsLearned', { required: true })}
+              placeholder="Lessons Learned"
+              className={`w-full p-2 border ${errors.lessonsLearned ? 'border-red-500' : 'border-gray-300'} rounded`}
+            />
+            {errors.lessonsLearned && <span className="text-red-500 text-sm">This field is required</span>}
+          </div>
+
+          <div>
             <label className="block mb-1" htmlFor="location">Location</label>
             <StandaloneSearchBox
               onLoad={(ref) => setSearchBox(ref)}
@@ -135,50 +199,20 @@ const JournalEntryForm: React.FC = () => {
             <Marker position={location} />
           </GoogleMap>
 
-          <div>
-            <label className="block mb-1" htmlFor="courtSurface">Court Surface</label>
-            <input
-              type="text"
-              {...register('courtSurface', { required: true })}
-              placeholder="Court Surface"
-              className={`w-full p-2 border ${errors.courtSurface ? 'border-red-500' : 'border-gray-300'} rounded`}
-            />
-            {errors.courtSurface && <span className="text-red-500 text-sm">This field is required</span>}
-          </div>
+          {/* Display Google Reviews */}
+          {reviews.length > 0 && (
+            <div className="reviews-section mt-4">
+              <h3 className="font-bold mb-2">Google Reviews</h3>
+              {reviews.map((review, index) => (
+                <div key={index} className="review-item mb-4 p-2 border-b">
+                  <p><strong>{review.author_name}</strong>: {review.text}</p>
+                  <p>Rating: {review.rating} / 5</p>
+                </div>
+              ))}
+            </div>
+          )}
 
-          <div>
-            <label className="block mb-1" htmlFor="strengths">Strengths</label>
-            <textarea
-              {...register('strengths', { required: true })}
-              placeholder="Strengths"
-              className={`w-full p-2 border ${errors.strengths ? 'border-red-500' : 'border-gray-300'} rounded`}
-            />
-            {errors.strengths && <span className="text-red-500 text-sm">This field is required</span>}
-          </div>
-
-          <div>
-            <label className="block mb-1" htmlFor="weaknesses">Weaknesses</label>
-            <textarea
-              {...register('weaknesses', { required: true })}
-              placeholder="Weaknesses"
-              className={`w-full p-2 border ${errors.weaknesses ? 'border-red-500' : 'border-gray-300'} rounded`}
-            />
-            {errors.weaknesses && <span className="text-red-500 text-sm">This field is required</span>}
-          </div>
-
-          <div>
-            <label className="block mb-1" htmlFor="lessonsLearned">What I Learned</label>
-            <textarea
-              {...register('lessonsLearned', { required: true })}
-              placeholder="What I Learned"
-              className={`w-full p-2 border ${errors.lessonsLearned ? 'border-red-500' : 'border-gray-300'} rounded`}
-            />
-            {errors.lessonsLearned && <span className="text-red-500 text-sm">This field is required</span>}
-          </div>
-
-          <button type="submit" className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
-            Submit
-          </button>
+          <button type="submit" className="w-full p-2 bg-blue-500 text-white rounded">Submit</button>
         </form>
       </div>
     </LoadScript>
