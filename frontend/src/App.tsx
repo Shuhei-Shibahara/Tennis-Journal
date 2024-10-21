@@ -4,30 +4,29 @@ import { useDispatch, useSelector } from 'react-redux';
 import Home from './components/Home';
 import Register from './components/Register';
 import Login from './components/Login';
-import Journal from './components/Journal';
+import JournalEntryForm from './components/JournalEntryForm';
+import JournalEntries from './components/JournalEntries';
 import Navbar from './components/Navbar';
 import { logout } from './store/sessionReducer';
-import { fetchUserData } from './utils/authUtils'; // Import the utility function
+import { fetchUserData } from './utils/authUtils';
 import { RootState } from './store';
 import './index.css';
 
 const App: React.FC = () => {
   const dispatch = useDispatch();
   const isLoggedIn = useSelector((state: RootState) => state.session.isLoggedIn);
-  const [loading, setLoading] = useState(true); // Initialize loading state
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token'); // Retrieve token from localStorage
+    const token = localStorage.getItem('token');
 
     const fetchUser = async () => {
       if (!token) {
-        console.log('No token found, logging out');
         dispatch(logout());
         setLoading(false);
         return;
       }
 
-      // Fetch user data using the utility function
       await fetchUserData(token, dispatch);
       setLoading(false);
     };
@@ -41,7 +40,7 @@ const App: React.FC = () => {
   };
 
   if (loading) {
-    return <div>Loading...</div>; // Show a loading indicator while fetching user data
+    return <div>Loading...</div>;
   }
 
   return (
@@ -51,7 +50,8 @@ const App: React.FC = () => {
         <Route path="/" element={<Home />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={isLoggedIn ? <Navigate to="/journal" /> : <Login />} />
-        <Route path="/journal" element={isLoggedIn ? <Journal /> : <Navigate to="/login" />} />
+        <Route path="/journal" element={isLoggedIn ? <JournalEntryForm /> : <Navigate to="/login" />} />
+        <Route path="/journal-entries" element={isLoggedIn ? <JournalEntries /> : <Navigate to="/login" />} /> {/* Changed to /journal-entries */}
       </Routes>
     </Router>
   );

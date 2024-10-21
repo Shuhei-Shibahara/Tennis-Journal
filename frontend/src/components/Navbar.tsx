@@ -16,7 +16,10 @@ const Navbar: React.FC<NavbarProps> = ({ isLoggedIn, onLogout }) => {
         {isLoggedIn ? (
           <>
             <li>
-              <Link to="/journal" className="text-white">Journal</Link>
+              <Link to="/journal" className="text-white">Create</Link>
+            </li>
+            <li>
+              <Link to="/journal-entries" className="text-white">Entries</Link>
             </li>
             <li>
               <button onClick={onLogout} className="text-white">Logout</button>

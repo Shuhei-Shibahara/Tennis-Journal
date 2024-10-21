@@ -27,13 +27,14 @@ export const createJournalEntry = async (req: Request, res: Response) => {
 
 // Get all journal entries for a specific user
 export const getJournalEntries = async (req: Request, res: Response) => {
-  try {
-    const userId = req.params.userId;
-    const journalEntries = await Journal.find({ userId });
+  const userId = req.params.userId;
 
-    res.status(200).json(journalEntries);
+  try {
+    const entries = await Journal.find({ userId }); // Fetch entries for the user
+    return res.status(200).json(entries);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching journal entries', error });
+    console.error('Error fetching journal entries:', error);
+    return res.status(500).json({ message: 'Failed to fetch journal entries' });
   }
 };
 
