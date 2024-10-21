@@ -4,10 +4,10 @@ import User, { IUser } from '../models/User';
 // Create a new user
 export const createUser = async (req: Request, res: Response) => {
   try {
-    const { username, email, password } = req.body;
+    const { email, password } = req.body;
 
+    // Create a new user
     const newUser: IUser = new User({
-      username,
       email,
       password,
     });
@@ -15,9 +15,11 @@ export const createUser = async (req: Request, res: Response) => {
     const savedUser = await newUser.save();
     res.status(201).json(savedUser);
   } catch (error) {
+    console.error(error); // Log the error for debugging
     res.status(500).json({ message: 'Error creating user', error });
   }
 };
+
 
 // Get all users
 export const getUsers = async (req: Request, res: Response) => {

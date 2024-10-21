@@ -17,9 +17,9 @@ const User_1 = __importDefault(require("../models/User"));
 // Create a new user
 const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { username, email, password } = req.body;
+        const { email, password } = req.body;
+        // Create a new user
         const newUser = new User_1.default({
-            username,
             email,
             password,
         });
@@ -27,6 +27,7 @@ const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         res.status(201).json(savedUser);
     }
     catch (error) {
+        console.error(error); // Log the error for debugging
         res.status(500).json({ message: 'Error creating user', error });
     }
 });

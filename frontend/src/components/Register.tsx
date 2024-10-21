@@ -7,7 +7,6 @@ import { login } from '../store/sessionReducer';
 import { fetchUserData } from '../utils/authUtils'; // Import the utility function
 
 interface RegisterFormData {
-  username: string;
   email: string;
   password: string;
 }
@@ -52,16 +51,6 @@ const Register: React.FC = () => {
         className="w-full max-w-md p-8 space-y-4 bg-white shadow-lg rounded-lg border border-gray-300"
       >
         <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Register</h2>
-
-        <div className="mb-4">
-          <label className="block mb-1 text-gray-600">Username</label>
-          <input
-            {...register('username', { required: true })}
-            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter your username"
-          />
-          {errors.username && <p className="text-red-500 text-sm">Username is required</p>}
-        </div>
 
         <div className="mb-4">
           <label className="block mb-1 text-gray-600">Email</label>
