@@ -1,11 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react'; // Import useState
 import { useForm } from 'react-hook-form';
 import { useDispatch } from 'react-redux';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../store/sessionReducer';
-import { fetchUserData } from '../utils/authUtils'; // Import the utility function
-
+import { fetchUserData } from '../utils/authUtils';
 
 interface LoginFormData {
   email: string;
@@ -16,6 +15,7 @@ const LoginForm: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>();
+  const [errorMessage, setErrorMessage] = useState(''); // State for error message
 
   const onSubmit = async (data: LoginFormData) => {
     try {
@@ -34,11 +34,26 @@ const LoginForm: React.FC = () => {
       navigate('/journal');
     } catch (error) {
       console.error('Login error:', error);
+
+      // Set the error message from the response
+      if (axios.isAxiosError(error) && error.response) {
+        // Check for specific error messages from the backend
+        const errorResponse = error.response.data.message;
+        if (errorResponse.includes('Invalid email or password')) {
+          setErrorMessage('Invalid email or password. Please try again.');
+        } else {
+          setErrorMessage(errorResponse || 'Login failed');
+        }
+      } else {
+        setErrorMessage('An unexpected error occurred. Please try again.');
+      }
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-xs bg-white p-6 rounded-lg shadow-lg">
+      {errorMessage && <p className="text-red-500 text-sm text-center mb-4">{errorMessage}</p>} {/* Error message display */}
+
       <div className="mb-4">
         <label className="block text-gray-700 text-sm font-bold mb-2">Email</label>
         <input

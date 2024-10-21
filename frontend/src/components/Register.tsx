@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react'; // Import useState
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../store/sessionReducer';
-import { fetchUserData } from '../utils/authUtils'; // Import the utility function
+import { fetchUserData } from '../utils/authUtils';
 
 interface RegisterFormData {
   email: string;
@@ -15,6 +15,7 @@ const Register: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormData>();
+  const [errorMessage, setErrorMessage] = useState(''); // State for error message
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
@@ -41,6 +42,19 @@ const Register: React.FC = () => {
       navigate('/journal');
     } catch (error) {
       console.error('Registration/Login error:', error);
+
+      // Set the error message from the response
+      if (axios.isAxiosError(error) && error.response) {
+        // Check for specific error messages from the backend
+        const errorResponse = error.response.data.message;
+        if (errorResponse.includes('duplicate key error')) {
+          setErrorMessage('This email address is already registered.');
+        } else {
+          setErrorMessage(errorResponse || 'Registration failed');
+        }
+      } else {
+        setErrorMessage('An unexpected error occurred. Please try again.');
+      }
     }
   };
 
@@ -51,6 +65,8 @@ const Register: React.FC = () => {
         className="w-full max-w-md p-8 space-y-4 bg-white shadow-lg rounded-lg border border-gray-300"
       >
         <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Register</h2>
+
+        {errorMessage && <p className="text-red-500 text-sm text-center">{errorMessage}</p>} {/* Error message display */}
 
         <div className="mb-4">
           <label className="block mb-1 text-gray-600">Email</label>
