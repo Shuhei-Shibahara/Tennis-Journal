@@ -29,10 +29,10 @@ const mapCenter = {
 const JournalEntryForm: React.FC = () => {
   const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm<IJournalEntry>();
   const user = useSelector((state: RootState) => state.session.user);
-  const [location, setLocation] = React.useState(mapCenter); // Map location state
-  const [searchBox, setSearchBox] = React.useState<google.maps.places.SearchBox | null>(null); // State for search box
-  const [placeId, setPlaceId] = React.useState<string | null>(null); // State to store the place ID
-  const [reviews, setReviews] = React.useState<Array<google.maps.places.PlaceReview>>([]); // State for reviews
+  const [location, setLocation] = React.useState(mapCenter); 
+  const [searchBox, setSearchBox] = React.useState<google.maps.places.SearchBox | null>(null); 
+  const [placeId, setPlaceId] = React.useState<string | null>(null); 
+  const [reviews, setReviews] = React.useState<Array<google.maps.places.PlaceReview>>([]); 
 
   const onSubmit: SubmitHandler<IJournalEntry> = async (data) => {
     try {
@@ -57,18 +57,16 @@ const JournalEntryForm: React.FC = () => {
     }
   };
 
-  // Function to handle place selection from search box
   const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
     if (place.geometry) {
-      const lat = place.geometry.location?.lat() ?? 34.0522; // Default latitude
-      const lng = place.geometry.location?.lng() ?? -118.2437; // Default longitude
-      setLocation({ lat, lng }); // Set map location
-      setValue('location', place.formatted_address || ''); // Set the value of the location field
-      setPlaceId(place.place_id || null); // Save the place ID for fetching reviews
+      const lat = place.geometry.location?.lat() ?? 34.0522; 
+      const lng = place.geometry.location?.lng() ?? -118.2437; 
+      setLocation({ lat, lng }); 
+      setValue('location', place.formatted_address || ''); 
+      setPlaceId(place.place_id || null); 
     }
   };
 
-  // useEffect to fetch reviews once a place is selected
   React.useEffect(() => {
     if (placeId) {
       const service = new google.maps.places.PlacesService(document.createElement('div'));
