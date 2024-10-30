@@ -1,220 +1,155 @@
-import React from 'react';
-import { useForm, SubmitHandler } from 'react-hook-form';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { LoadScript, GoogleMap, Marker, StandaloneSearchBox } from '@react-google-maps/api';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrash, faWrench, faSave } from '@fortawesome/free-solid-svg-icons';
 
-interface IJournalEntry {
-  date: string;
-  opponent: string;
-  tournamentName: string;
-  location: string;
-  courtSurface: string;
-  strengths: string;
-  weaknesses: string;
-  lessonsLearned: string;
-}
+const JournalEntries: React.FC = () => {
+  const [entries, setEntries] = useState<any[]>([]);
+  const [error, setError] = useState('');
+  const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<any>({});
+  const userId = useSelector((state: RootState) => state.session.user?._id);
 
-const containerStyle = {
-  width: '100%',
-  height: '400px',
-};
-
-const mapCenter = {
-  lat: 34.0522,  // Default latitude (e.g., Los Angeles)
-  lng: -118.2437,  // Default longitude (e.g., Los Angeles)
-};
-
-const JournalEntryForm: React.FC = () => {
-  const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm<IJournalEntry>();
-  const user = useSelector((state: RootState) => state.session.user);
-  const [location, setLocation] = React.useState(mapCenter); 
-  const [searchBox, setSearchBox] = React.useState<google.maps.places.SearchBox | null>(null); 
-  const [placeId, setPlaceId] = React.useState<string | null>(null); 
-  const [reviews, setReviews] = React.useState<Array<google.maps.places.PlaceReview>>([]); 
-
-  const onSubmit: SubmitHandler<IJournalEntry> = async (data) => {
-    try {
-      const userId = user?._id;
-
-      if (!userId) {
-        alert('User ID is missing. Please log in again.');
-        return;
+  useEffect(() => {
+    const fetchEntries = async () => {
+      try {
+        if (userId) {
+          const token = localStorage.getItem('token');
+          const response = await axios.get(`http://localhost:5000/api/journals/user/${userId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          setEntries(response.data);
+        }
+      } catch (error: any) {
+        console.error('Error fetching journal entries:', error);
+        setError('Failed to fetch journal entries.');
       }
+    };
+    fetchEntries();
+  }, [userId]);
 
-      await axios.post('http://localhost:5000/api/journals', { ...data, userId }, {
+  const handleEdit = (entry: any) => {
+    setEditingEntryId(entry._id);
+    setEditForm({
+      tournamentName: entry.tournamentName,
+      date: entry.date,
+      opponent: entry.opponent,
+      location: entry.location,
+      courtSurface: entry.courtSurface,
+      strengths: entry.strengths,
+      weaknesses: entry.weaknesses,
+      lessonsLearned: entry.lessonsLearned,
+    });
+  };
+
+  const handleSave = async (entryId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`http://localhost:5000/api/journals/${entryId}`, editForm, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${token}`,
         },
       });
-
-      alert('Journal entry submitted successfully!');
-      reset();
+      setEntries(entries.map((entry) => (entry._id === entryId ? { ...entry, ...editForm } : entry)));
+      setEditingEntryId(null);
+      setEditForm({});
     } catch (error) {
-      console.error('Error submitting journal entry:', error);
-      alert('Failed to submit journal entry. Please try again.');
+      console.error('Error saving entry:', error);
+      setError('Failed to save entry.');
     }
   };
 
-  const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
-    if (place.geometry) {
-      const lat = place.geometry.location?.lat() ?? 34.0522; 
-      const lng = place.geometry.location?.lng() ?? -118.2437; 
-      setLocation({ lat, lng }); 
-      setValue('location', place.formatted_address || ''); 
-      setPlaceId(place.place_id || null); 
-    }
+  const handleChange = (field: string, value: string) => {
+    setEditForm({ ...editForm, [field]: value });
   };
 
-  React.useEffect(() => {
-    if (placeId) {
-      const service = new google.maps.places.PlacesService(document.createElement('div'));
-      service.getDetails(
-        { placeId },
-        (placeDetails) => {
-          if (placeDetails && placeDetails.reviews) {
-            setReviews(placeDetails.reviews); // Set the reviews in state
-          } else {
-            setReviews([]); // Clear reviews if none found
-          }
-        }
-      );
+  const handleDelete = async (entryId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`http://localhost:5000/api/journals/${entryId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setEntries(entries.filter((entry) => entry._id !== entryId));
+    } catch (error) {
+      console.error('Error deleting entry:', error);
+      setError('Failed to delete entry.');
     }
-  }, [placeId]);
+  };
 
   return (
-    <LoadScript
-      googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY || ''}
-      libraries={["places"]}
-    >
-      <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-        <h2 className="text-xl font-bold mb-4 text-center">Journal Entry</h2>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <label className="block mb-1" htmlFor="date">Date</label>
-            <input
-              type="date"
-              {...register('date', { required: true })}
-              className={`w-full p-2 border ${errors.date ? 'border-red-500' : 'border-gray-300'} rounded`}
-            />
-            {errors.date && <span className="text-red-500 text-sm">This field is required</span>}
-          </div>
-
-          <div>
-            <label className="block mb-1" htmlFor="opponent">Opponent</label>
-            <input
-              type="text"
-              {...register('opponent', { required: true })}
-              placeholder="Opponent"
-              className={`w-full p-2 border ${errors.opponent ? 'border-red-500' : 'border-gray-300'} rounded`}
-            />
-            {errors.opponent && <span className="text-red-500 text-sm">This field is required</span>}
-          </div>
-
-          <div>
-            <label className="block mb-1" htmlFor="tournamentName">Tournament Name</label>
-            <input
-              type="text"
-              {...register('tournamentName', { required: true })}
-              placeholder="Tournament Name"
-              className={`w-full p-2 border ${errors.tournamentName ? 'border-red-500' : 'border-gray-300'} rounded`}
-            />
-            {errors.tournamentName && <span className="text-red-500 text-sm">This field is required</span>}
-          </div>
-
-          <div>
-            <label className="block mb-1" htmlFor="courtSurface">Court Surface</label>
-            <input
-              type="text"
-              {...register('courtSurface', { required: true })}
-              placeholder="Court Surface"
-              className={`w-full p-2 border ${errors.courtSurface ? 'border-red-500' : 'border-gray-300'} rounded`}
-            />
-            {errors.courtSurface && <span className="text-red-500 text-sm">This field is required</span>}
-          </div>
-
-          <div>
-            <label className="block mb-1" htmlFor="strengths">Strengths</label>
-            <input
-              type="text"
-              {...register('strengths', { required: true })}
-              placeholder="Strengths"
-              className={`w-full p-2 border ${errors.strengths ? 'border-red-500' : 'border-gray-300'} rounded`}
-            />
-            {errors.strengths && <span className="text-red-500 text-sm">This field is required</span>}
-          </div>
-
-          <div>
-            <label className="block mb-1" htmlFor="weaknesses">Weaknesses</label>
-            <input
-              type="text"
-              {...register('weaknesses', { required: true })}
-              placeholder="Weaknesses"
-              className={`w-full p-2 border ${errors.weaknesses ? 'border-red-500' : 'border-gray-300'} rounded`}
-            />
-            {errors.weaknesses && <span className="text-red-500 text-sm">This field is required</span>}
-          </div>
-
-          <div>
-            <label className="block mb-1" htmlFor="lessonsLearned">Lessons Learned</label>
-            <input
-              type="text"
-              {...register('lessonsLearned', { required: true })}
-              placeholder="Lessons Learned"
-              className={`w-full p-2 border ${errors.lessonsLearned ? 'border-red-500' : 'border-gray-300'} rounded`}
-            />
-            {errors.lessonsLearned && <span className="text-red-500 text-sm">This field is required</span>}
-          </div>
-
-          <div>
-            <label className="block mb-1" htmlFor="location">Location</label>
-            <StandaloneSearchBox
-              onLoad={(ref) => setSearchBox(ref)}
-              onPlacesChanged={() => {
-                const places = searchBox?.getPlaces();
-                if (places && places.length > 0) {
-                  handlePlaceSelect(places[0]);
-                }
-              }}
-            >
-              <input
-                type="text"
-                {...register('location', { required: true })}
-                placeholder="Location"
-                className={`w-full p-2 border ${errors.location ? 'border-red-500' : 'border-gray-300'} rounded`}
-              />
-            </StandaloneSearchBox>
-            {errors.location && <span className="text-red-500 text-sm">This field is required</span>}
-          </div>
-
-          {/* Google Maps Integration */}
-          <GoogleMap
-            mapContainerStyle={containerStyle}
-            center={location}
-            zoom={10}
-          >
-            <Marker position={location} />
-          </GoogleMap>
-
-          {/* Display Google Reviews */}
-          {reviews.length > 0 && (
-            <div className="reviews-section mt-4">
-              <h3 className="font-bold mb-2">Google Reviews</h3>
-              {reviews.map((review, index) => (
-                <div key={index} className="review-item mb-4 p-2 border-b">
-                  <p><strong>{review.author_name}</strong>: {review.text}</p>
-                  <p>Rating: {review.rating} / 5</p>
+    <div className="min-h-screen bg-gray-100 py-8 px-4">
+      <h2 className="text-3xl font-bold mb-6 text-center">Your Journal Entries</h2>
+      {error && <p className="text-red-500 text-center">{error}</p>}
+      {entries.length === 0 && !error && <p className="text-center">No journal entries found.</p>}
+      <ul className="space-y-6 max-w-4xl mx-auto">
+        {entries.map((entry) => (
+          <li key={entry._id} className="p-6 bg-white border-2 border-gray-300 rounded-lg shadow-lg relative flex justify-between items-center">
+            <div className="flex-grow">
+              {editingEntryId === entry._id ? (
+                // Render form fields with labels for editing
+                <div className="space-y-4">
+                  {Object.keys(editForm).map((key) => (
+                    <div key={key} className="mb-2">
+                      <label className="block font-semibold text-gray-600 mb-1">{key.charAt(0).toUpperCase() + key.slice(1)}</label>
+                      <input
+                        type="text"
+                        value={editForm[key] || ''}
+                        onChange={(e) => handleChange(key, e.target.value)}
+                        className="border border-gray-300 rounded p-2 w-full"
+                      />
+                    </div>
+                  ))}
+                  <button onClick={() => handleSave(entry._id)} className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                    <FontAwesomeIcon icon={faSave} /> Save
+                  </button>
                 </div>
-              ))}
+              ) : (
+                // Display entry details
+                <>
+                  <h3 className="text-2xl font-serif mb-2 text-purple-700 underline">{entry.tournamentName}</h3>
+                  <p className="text-gray-500">Entry ID: {entry._id}</p>
+                  <p><strong className="font-semibold">Date:</strong> {new Date(entry.date).toLocaleDateString()}</p>
+                  <p><strong className="font-semibold">Opponent:</strong> {entry.opponent}</p>
+                  <p><strong className="font-semibold">Location:</strong> {entry.location}</p>
+                  <p><strong className="font-semibold">Court Surface:</strong> {entry.courtSurface}</p>
+                  <div className="flex space-x-4">
+                    <div>
+                      <p><strong className="font-semibold">Strengths:</strong></p>
+                      <p className="italic bg-green-50 p-2 rounded-md">{entry.strengths}</p>
+                    </div>
+                    <div>
+                      <p><strong className="font-semibold">Weaknesses:</strong></p>
+                      <p className="italic bg-red-50 p-2 rounded-md">{entry.weaknesses}</p>
+                    </div>
+                  </div>
+                  <p><strong className="font-semibold">Lessons Learned:</strong></p>
+                  <p className="italic bg-yellow-50 p-2 rounded-md">{entry.lessonsLearned}</p>
+                </>
+              )}
             </div>
-          )}
 
-          <button type="submit" className="w-full p-2 bg-blue-500 text-white rounded">Submit</button>
-        </form>
-      </div>
-    </LoadScript>
+            {/* Right side: Edit and Delete icons */}
+            <div className="flex space-x-4">
+              {editingEntryId === entry._id ? null : (
+                <button onClick={() => handleEdit(entry)} className="text-blue-500 hover:text-blue-700">
+                  <FontAwesomeIcon icon={faWrench} size="lg" />
+                </button>
+              )}
+              <button onClick={() => handleDelete(entry._id)} className="text-red-500 hover:text-red-700">
+                <FontAwesomeIcon icon={faTrash} size="lg" />
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 };
 
-export default JournalEntryForm;
+export default JournalEntries;

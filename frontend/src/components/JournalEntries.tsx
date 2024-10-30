@@ -8,6 +8,8 @@ import { faTrash, faWrench } from '@fortawesome/free-solid-svg-icons';
 const JournalEntries: React.FC = () => {
   const [entries, setEntries] = useState<any[]>([]);
   const [error, setError] = useState('');
+  const [currentEditId, setCurrentEditId] = useState<string | null>(null);
+  const [editableEntry, setEditableEntry] = useState<any>({});
   const userId = useSelector((state: RootState) => state.session.user?._id);
 
   useEffect(() => {
@@ -30,9 +32,33 @@ const JournalEntries: React.FC = () => {
     fetchEntries();
   }, [userId]);
 
-  const handleEdit = (entryId: string) => {
-    console.log(`Edit entry with ID: ${entryId}`);
-    // Logic for handling edit functionality
+  const handleEdit = (entry: any) => {
+    setCurrentEditId(entry._id);
+    setEditableEntry({ ...entry });
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, field: string) => {
+    setEditableEntry({ ...editableEntry, [field]: e.target.value });
+  };
+
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `http://localhost:5000/api/journals/${currentEditId}`,
+        { ...editableEntry },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setEntries(entries.map(entry => (entry._id === currentEditId ? { ...editableEntry } : entry)));
+      setCurrentEditId(null); // Exit edit mode
+    } catch (error) {
+      console.error('Error saving entry:', error);
+      setError('Failed to save entry.');
+    }
   };
 
   const handleDelete = async (entryId: string) => {
@@ -58,31 +84,62 @@ const JournalEntries: React.FC = () => {
       <ul className="space-y-6 max-w-4xl mx-auto">
         {entries.map((entry) => (
           <li key={entry._id} className="p-6 bg-white border-2 border-gray-300 rounded-lg shadow-lg relative flex justify-between items-center">
-            {/* Left side: Entry details */}
-            <div className="flex-grow">
-              <h3 className="text-2xl font-serif mb-2 text-purple-700 underline">{entry.tournamentName}</h3>
-              <p className="text-gray-500">Entry ID: {entry._id}</p>
-              <p><strong className="font-semibold">Date:</strong> {new Date(entry.date).toLocaleDateString()}</p>
-              <p><strong className="font-semibold">Opponent:</strong> {entry.opponent}</p>
-              <p><strong className="font-semibold">Location:</strong> {entry.location}</p>
-              <p><strong className="font-semibold">Court Surface:</strong> {entry.courtSurface}</p>
-              <div className="flex space-x-4">
-                <div>
-                  <p><strong className="font-semibold">Strengths:</strong></p>
-                  <p className="italic bg-green-50 p-2 rounded-md">{entry.strengths}</p>
-                </div>
-                <div>
-                  <p><strong className="font-semibold">Weaknesses:</strong></p>
-                  <p className="italic bg-red-50 p-2 rounded-md">{entry.weaknesses}</p>
-                </div>
+            {/* Entry details or edit form based on edit state */}
+            {currentEditId === entry._id ? (
+              <div className="flex-grow">
+                <input
+                  type="text"
+                  className="text-2xl font-serif mb-2 text-purple-700 underline w-full p-2 border rounded"
+                  value={editableEntry.tournamentName}
+                  onChange={(e) => handleInputChange(e, 'tournamentName')}
+                />
+                <input
+                  type="text"
+                  className="text-gray-500 w-full p-2 border rounded mb-2"
+                  value={editableEntry.opponent}
+                  onChange={(e) => handleInputChange(e, 'opponent')}
+                />
+                <textarea
+                  className="italic bg-green-50 w-full p-2 rounded-md"
+                  value={editableEntry.strengths}
+                  onChange={(e) => handleInputChange(e, 'strengths')}
+                />
+                <textarea
+                  className="italic bg-red-50 w-full p-2 rounded-md"
+                  value={editableEntry.weaknesses}
+                  onChange={(e) => handleInputChange(e, 'weaknesses')}
+                />
+                <textarea
+                  className="italic bg-yellow-50 w-full p-2 rounded-md"
+                  value={editableEntry.lessonsLearned}
+                  onChange={(e) => handleInputChange(e, 'lessonsLearned')}
+                />
+                <button onClick={handleSave} className="text-green-500 hover:text-green-700 mt-2">Save</button>
+                <button onClick={() => setCurrentEditId(null)} className="text-gray-500 hover:text-gray-700 mt-2 ml-4">Cancel</button>
               </div>
-              <p><strong className="font-semibold">Lessons Learned:</strong></p>
-              <p className="italic bg-yellow-50 p-2 rounded-md">{entry.lessonsLearned}</p>
-            </div>
+            ) : (
+              <div className="flex-grow">
+                <h3 className="text-2xl font-serif mb-2 text-purple-700 underline">{entry.tournamentName}</h3>
+                <p className="text-gray-500">Entry ID: {entry._id}</p>
+                <p><strong className="font-semibold">Opponent:</strong> {entry.opponent}</p>
+                <div className="flex space-x-4">
+                  <div>
+                    <p><strong className="font-semibold">Strengths:</strong></p>
+                    <p className="italic bg-green-50 p-2 rounded-md">{entry.strengths}</p>
+                  </div>
+                  <div>
+                    <p><strong className="font-semibold">Weaknesses:</strong></p>
+                    <p className="italic bg-red-50 p-2 rounded-md">{entry.weaknesses}</p>
+                  </div>
+                </div>
+                <p><strong className="font-semibold">Lessons Learned:</strong></p>
+                <p className="italic bg-yellow-50 p-2 rounded-md">{entry.lessonsLearned}</p>
+              </div>
+            )}
 
-            {/* Right side: Edit and Delete icons */}
+            {/* Edit and Delete icons */}
             <div className="flex space-x-4">
-              <button onClick={() => handleEdit(entry._id)} className="text-blue-500 hover:text-blue-700">
+              <button onClick={() => handleEdit(entry)} className="text-blue-500 hover:text-blue-700">
                 <FontAwesomeIcon icon={faWrench} size="lg" />
               </button>
               <button onClick={() => handleDelete(entry._id)} className="text-red-500 hover:text-red-700">
