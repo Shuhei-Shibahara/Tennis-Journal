@@ -39,13 +39,14 @@ const createJournalEntry = (req, res) => __awaiter(void 0, void 0, void 0, funct
 exports.createJournalEntry = createJournalEntry;
 // Get all journal entries for a specific user
 const getJournalEntries = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.params.userId;
     try {
-        const userId = req.params.userId;
-        const journalEntries = yield Journal_1.default.find({ userId });
-        res.status(200).json(journalEntries);
+        const entries = yield Journal_1.default.find({ userId }); // Fetch entries for the user
+        return res.status(200).json(entries);
     }
     catch (error) {
-        res.status(500).json({ message: 'Error fetching journal entries', error });
+        console.error('Error fetching journal entries:', error);
+        return res.status(500).json({ message: 'Failed to fetch journal entries' });
     }
 });
 exports.getJournalEntries = getJournalEntries;

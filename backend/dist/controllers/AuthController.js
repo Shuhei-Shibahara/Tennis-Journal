@@ -20,8 +20,8 @@ const bcrypt_1 = __importDefault(require("bcrypt"));
 // Register a new user
 const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { username, email, password } = req.body;
-        const newUser = new User_1.default({ username, email, password }); // No manual hashing here
+        const { email, password } = req.body;
+        const newUser = new User_1.default({ email, password }); // No manual hashing here
         const savedUser = yield newUser.save();
         res.status(201).json(savedUser);
         console.log('New user created:', savedUser);
@@ -47,9 +47,9 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         if (!isMatch)
             return res.status(400).json({ message: 'Invalid credentials' });
         // Generate token
-        const token = jsonwebtoken_1.default.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = jsonwebtoken_1.default.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
         // Send the token and user info
-        res.json({ token, user: { id: user._id, username: user.username } });
+        res.json({ token, user: { id: user._id } });
     }
     catch (error) {
         console.error('Error logging in:', error instanceof Error ? error.message : error);
