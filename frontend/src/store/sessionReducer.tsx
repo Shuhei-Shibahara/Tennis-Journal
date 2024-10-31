@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface User {
-  _id: string;
+  userId: string; // change _id to userId
 }
 
 interface SessionState {

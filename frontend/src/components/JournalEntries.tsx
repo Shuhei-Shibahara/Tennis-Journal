@@ -10,7 +10,7 @@ const JournalEntries: React.FC = () => {
   const [error, setError] = useState('');
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<any>({});
-  const userId = useSelector((state: RootState) => state.session.user?._id);
+  const userId = useSelector((state: RootState) => state.session.user?.userId);
 
   useEffect(() => {
     const fetchEntries = async () => {

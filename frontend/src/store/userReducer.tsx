@@ -1,11 +1,11 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface UserState {
-  id: string | null;
+  userId: string | null; // Change 'id' to 'userId'
 }
 
 const initialState: UserState = {
-  id: null,
+  userId: null,
 };
 
 const userSlice = createSlice({
@@ -13,10 +13,10 @@ const userSlice = createSlice({
   initialState,
   reducers: {
     login: (state, action: PayloadAction<UserState>) => {
-      state.id = action.payload.id;
+      state.userId = action.payload.userId; // Use 'userId' here
     },
     logout: (state) => {
-      state.id = null;
+      state.userId = null;
     },
   },
 });

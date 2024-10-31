@@ -36,7 +36,7 @@ const JournalEntryForm: React.FC = () => {
 
   const onSubmit: SubmitHandler<IJournalEntry> = async (data) => {
     try {
-      const userId = user?._id;
+      const userId = user?.userId;
 
       if (!userId) {
         alert('User ID is missing. Please log in again.');
