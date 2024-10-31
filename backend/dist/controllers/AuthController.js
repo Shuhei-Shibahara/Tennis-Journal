@@ -13,25 +13,23 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.login = exports.register = void 0;
-const mongoose_1 = __importDefault(require("mongoose")); // Add this import at the top
-const User_1 = __importDefault(require("../models/User"));
+const User_1 = require("../models/User");
+const uuid_1 = require("uuid"); // Import uuid
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
-// Register a new user
 const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { email, password } = req.body;
-        const newUser = new User_1.default({ email, password }); // No manual hashing here
-        const savedUser = yield newUser.save();
-        res.status(201).json(savedUser);
-        console.log('New user created:', savedUser);
+        const { email, password } = req.body; // Removed id from body for automatic generation
+        // Hash the password before storing it
+        const hashedPassword = yield bcrypt_1.default.hash(password, 10);
+        const newUser = { userId: (0, uuid_1.v4)(), email, password: hashedPassword }; // Use 'userId' instead of 'id'
+        // Ensure the createUserInDB function expects IUser
+        yield (0, User_1.createUserInDB)(newUser);
+        res.status(201).json({ email });
     }
     catch (error) {
-        if (error instanceof mongoose_1.default.Error.ValidationError) {
-            return res.status(400).json({ message: 'Validation error', errors: error.errors });
-        }
-        console.error(error);
-        res.status(500).json({ message: 'Error registering user', error: error.message });
+        console.error('Registration error:', error);
+        res.status(500).json({ message: 'Error registering user', error });
     }
 });
 exports.register = register;
@@ -39,21 +37,21 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email, password } = req.body;
         // Find user by email
-        const user = yield User_1.default.findOne({ email });
+        const users = yield (0, User_1.getUsersFromDB)();
+        const user = users === null || users === void 0 ? void 0 : users.find((u) => u.email === email);
         if (!user)
             return res.status(404).json({ message: 'User not found' });
-        // Compare password with the stored hashed password
+        // Compare password
         const isMatch = yield bcrypt_1.default.compare(password, user.password);
         if (!isMatch)
             return res.status(400).json({ message: 'Invalid credentials' });
         // Generate token
-        const token = jsonwebtoken_1.default.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        // Send the token and user info
-        res.json({ token, user: { id: user._id } });
+        const token = jsonwebtoken_1.default.sign({ userId: user.userId }, process.env.JWT_SECRET, { expiresIn: '1h' }); // Use 'userId'
+        res.json({ token, user: { userId: user.userId, email: user.email } }); // Use 'userId'
     }
     catch (error) {
-        console.error('Error logging in:', error instanceof Error ? error.message : error);
-        res.status(500).json({ message: 'Error logging in' });
+        console.error(error);
+        res.status(500).json({ message: 'Error logging in', error });
     }
 });
 exports.login = login;

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { logout, login } from '../store/sessionReducer'; 
+import { logout, login } from '../store/sessionReducer';
 import { AppDispatch } from '../store'; // Adjust based on your store setup
 
 export const fetchUserData = async (token: string, dispatch: AppDispatch) => {
@@ -11,14 +11,17 @@ export const fetchUserData = async (token: string, dispatch: AppDispatch) => {
   }
 
   const decodedToken = JSON.parse(atob(parts[1]));
-  console.log('Decoded token:', decodedToken);
+  console.log('Decoded token:', decodedToken); // Ensure this logs the expected userId.
 
-  const userId = decodedToken.id; // Ensure this matches your login/registration response
+  const userId = decodedToken.userId; // Ensure this matches the key in your token payload.
   if (!userId) {
     console.error('User ID not found in token:', decodedToken);
     dispatch(logout());
     return null;
   }
+
+  // Log the token being sent
+  console.log('Sending token:', token);
 
   try {
     const response = await axios.get(`http://localhost:5000/api/users/${userId}`, {

@@ -7,7 +7,7 @@ interface User {
 interface SessionState {
   user: User | null;
   isLoggedIn: boolean;
-  token: string | null; 
+  token: string | null;
 }
 
 const initialState: SessionState = {
@@ -21,13 +21,13 @@ const sessionSlice = createSlice({
   initialState,
   reducers: {
     login(state, action: PayloadAction<{ user: User; token: string }>) {
-      console.log('Logging in user:', action.payload.user); 
-      state.user = action.payload.user; 
-      state.token = action.payload.token; 
+      console.log('Logging in user:', action.payload.user);
+      state.user = action.payload.user;
+      state.token = action.payload.token;
       state.isLoggedIn = true;
     },
     logout(state) {
-      console.log('Logging out user'); 
+      console.log('Logging out user');
       state.user = null;
       state.token = null;
       state.isLoggedIn = false;

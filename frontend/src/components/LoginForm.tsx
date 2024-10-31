@@ -31,7 +31,7 @@ const LoginForm: React.FC = () => {
       // Fetch user data
       await fetchUserData(token, dispatch);
 
-      navigate('/journal');
+      navigate('/journal'); // Navigate to the journal page
     } catch (error) {
       console.error('Login error:', error);
 

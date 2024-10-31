@@ -13,24 +13,56 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const User_1 = __importDefault(require("../models/User"));
+const client_dynamodb_1 = require("@aws-sdk/client-dynamodb");
+const lib_dynamodb_1 = require("@aws-sdk/lib-dynamodb");
+// Initialize DynamoDB client
+const dynamoDBClient = new client_dynamodb_1.DynamoDBClient({ region: 'us-west-2' });
+const dynamoDB = lib_dynamodb_1.DynamoDBDocumentClient.from(dynamoDBClient); // Create a document client
+// Function to get user data from DynamoDB
+const getUserData = (userId) => __awaiter(void 0, void 0, void 0, function* () {
+    const params = {
+        TableName: 'Users',
+        Key: {
+            userId: userId, // Correctly using the partition key
+        },
+    };
+    try {
+        const data = yield dynamoDB.send(new lib_dynamodb_1.GetCommand(params)); // Use the GetCommand
+        return data.Item; // Return the user data
+    }
+    catch (error) {
+        console.error('Error fetching user data:', error);
+        throw error; // Handle or rethrow error as needed
+    }
+});
+// Middleware to authenticate and fetch user data
 const authMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
+    const token = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split(' ')[1];
+    if (!token) {
+        return res.status(401).json({ message: 'No token provided' });
+    }
     try {
-        const token = (_a = req.header('Authorization')) === null || _a === void 0 ? void 0 : _a.replace('Bearer ', '');
-        if (!token)
-            return res.status(401).json({ message: 'Authorization denied, no token' });
-        // Verify token
-        const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
-        const user = yield User_1.default.findById(decoded.id);
-        if (!user)
+        // Ensure JWT_SECRET is defined
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+            throw new Error('JWT secret is not defined'); // Throw error if secret is not set
+        }
+        // Decode the token
+        const decoded = jsonwebtoken_1.default.verify(token, secret); // Use the defined secret
+        const userId = decoded.userId; // Ensure this matches your token payload
+        console.log('Decoded user ID:', userId);
+        // Fetch user data
+        const userData = yield getUserData(userId);
+        if (!userData) {
             return res.status(404).json({ message: 'User not found' });
-        req.user = user;
-        next();
+        }
+        req.user = userData; // Attach user data to request
+        next(); // Proceed to the next middleware/route
     }
     catch (error) {
         console.error('Auth middleware error:', error);
-        res.status(401).json({ message: 'Authorization denied, token invalid' });
+        return res.status(401).json({ message: 'Unauthorized' });
     }
 });
 exports.default = authMiddleware;
