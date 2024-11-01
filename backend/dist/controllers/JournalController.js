@@ -8,17 +8,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteJournalEntry = exports.updateJournalEntry = exports.getJournalEntryById = exports.getJournalEntries = exports.createJournalEntry = void 0;
-const Journal_1 = __importDefault(require("../models/Journal"));
+exports.deleteJournalEntryHandler = exports.updateJournalEntryHandler = exports.getJournalEntryByIdHandler = exports.getJournalEntriesHandler = exports.createJournalEntryHandler = void 0;
+const Journal_1 = require("../models/Journal");
 // Create a new journal entry
-const createJournalEntry = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const createJournalEntryHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { userId, date, opponent, tournamentName, location, courtSurface, strengths, weaknesses, lessonsLearned } = req.body;
-        const newJournalEntry = new Journal_1.default({
+        const newJournalEntry = {
             userId,
             date,
             opponent,
@@ -28,20 +25,21 @@ const createJournalEntry = (req, res) => __awaiter(void 0, void 0, void 0, funct
             strengths,
             weaknesses,
             lessonsLearned,
-        });
-        const savedJournalEntry = yield newJournalEntry.save();
-        res.status(201).json(savedJournalEntry);
+        };
+        yield (0, Journal_1.createJournalEntry)(newJournalEntry);
+        res.status(201).json({ message: 'Journal entry created successfully' });
     }
     catch (error) {
+        console.error('Error creating journal entry:', error);
         res.status(500).json({ message: 'Error creating journal entry', error });
     }
 });
-exports.createJournalEntry = createJournalEntry;
+exports.createJournalEntryHandler = createJournalEntryHandler;
 // Get all journal entries for a specific user
-const getJournalEntries = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getJournalEntriesHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = req.params.userId;
     try {
-        const entries = yield Journal_1.default.find({ userId }); // Fetch entries for the user
+        const entries = yield (0, Journal_1.getJournalEntriesByUserId)(userId); // Fetch entries for the user
         return res.status(200).json(entries);
     }
     catch (error) {
@@ -49,49 +47,52 @@ const getJournalEntries = (req, res) => __awaiter(void 0, void 0, void 0, functi
         return res.status(500).json({ message: 'Failed to fetch journal entries' });
     }
 });
-exports.getJournalEntries = getJournalEntries;
+exports.getJournalEntriesHandler = getJournalEntriesHandler;
 // Get a specific journal entry by ID
-const getJournalEntryById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getJournalEntryByIdHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const entryId = req.params.id;
-        const journalEntry = yield Journal_1.default.findById(entryId);
+        const journalEntry = yield (0, Journal_1.getJournalEntryById)(entryId); // Modify this function in your model
         if (!journalEntry) {
             return res.status(404).json({ message: 'Journal entry not found' });
         }
         res.status(200).json(journalEntry);
     }
     catch (error) {
+        console.error('Error fetching journal entry:', error);
         res.status(500).json({ message: 'Error fetching journal entry', error });
     }
 });
-exports.getJournalEntryById = getJournalEntryById;
+exports.getJournalEntryByIdHandler = getJournalEntryByIdHandler;
 // Update a journal entry by ID
-const updateJournalEntry = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const updateJournalEntryHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const entryId = req.params.id;
-        const updatedEntry = yield Journal_1.default.findByIdAndUpdate(entryId, req.body, { new: true });
+        const updatedEntry = yield (0, Journal_1.updateJournalEntryById)(entryId, req.body); // Modify this function in your model
         if (!updatedEntry) {
             return res.status(404).json({ message: 'Journal entry not found' });
         }
         res.status(200).json(updatedEntry);
     }
     catch (error) {
+        console.error('Error updating journal entry:', error);
         res.status(500).json({ message: 'Error updating journal entry', error });
     }
 });
-exports.updateJournalEntry = updateJournalEntry;
+exports.updateJournalEntryHandler = updateJournalEntryHandler;
 // Delete a journal entry by ID
-const deleteJournalEntry = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const deleteJournalEntryHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const entryId = req.params.id;
-        const deletedEntry = yield Journal_1.default.findByIdAndDelete(entryId);
+        const deletedEntry = yield (0, Journal_1.deleteJournalEntryById)(entryId); // Modify this function in your model
         if (!deletedEntry) {
             return res.status(404).json({ message: 'Journal entry not found' });
         }
         res.status(200).json({ message: 'Journal entry deleted successfully' });
     }
     catch (error) {
+        console.error('Error deleting journal entry:', error);
         res.status(500).json({ message: 'Error deleting journal entry', error });
     }
 });
-exports.deleteJournalEntry = deleteJournalEntry;
+exports.deleteJournalEntryHandler = deleteJournalEntryHandler;

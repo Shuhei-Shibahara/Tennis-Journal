@@ -1,12 +1,13 @@
 import { Request, Response } from 'express';
-import Journal, { IJournal } from '../models/Journal';
+import { createJournalEntry, getJournalEntriesByUserId, getJournalEntryById, updateJournalEntryById, deleteJournalEntryById } from '../models/Journal';
+import { IJournal } from '../models/Journal';
 
 // Create a new journal entry
-export const createJournalEntry = async (req: Request, res: Response) => {
+export const createJournalEntryHandler = async (req: Request, res: Response) => {
   try {
     const { userId, date, opponent, tournamentName, location, courtSurface, strengths, weaknesses, lessonsLearned } = req.body;
 
-    const newJournalEntry: IJournal = new Journal({
+    const newJournalEntry: IJournal = {
       userId,
       date,
       opponent,
@@ -16,21 +17,22 @@ export const createJournalEntry = async (req: Request, res: Response) => {
       strengths,
       weaknesses,
       lessonsLearned,
-    });
+    };
 
-    const savedJournalEntry = await newJournalEntry.save();
-    res.status(201).json(savedJournalEntry);
+    await createJournalEntry(newJournalEntry);
+    res.status(201).json({ message: 'Journal entry created successfully' });
   } catch (error) {
+    console.error('Error creating journal entry:', error);
     res.status(500).json({ message: 'Error creating journal entry', error });
   }
 };
 
 // Get all journal entries for a specific user
-export const getJournalEntries = async (req: Request, res: Response) => {
+export const getJournalEntriesHandler = async (req: Request, res: Response) => {
   const userId = req.params.userId;
 
   try {
-    const entries = await Journal.find({ userId }); // Fetch entries for the user
+    const entries = await getJournalEntriesByUserId(userId); // Fetch entries for the user
     return res.status(200).json(entries);
   } catch (error) {
     console.error('Error fetching journal entries:', error);
@@ -39,10 +41,10 @@ export const getJournalEntries = async (req: Request, res: Response) => {
 };
 
 // Get a specific journal entry by ID
-export const getJournalEntryById = async (req: Request, res: Response) => {
+export const getJournalEntryByIdHandler = async (req: Request, res: Response) => {
   try {
     const entryId = req.params.id;
-    const journalEntry = await Journal.findById(entryId);
+    const journalEntry = await getJournalEntryById(entryId); // Modify this function in your model
 
     if (!journalEntry) {
       return res.status(404).json({ message: 'Journal entry not found' });
@@ -50,15 +52,16 @@ export const getJournalEntryById = async (req: Request, res: Response) => {
 
     res.status(200).json(journalEntry);
   } catch (error) {
+    console.error('Error fetching journal entry:', error);
     res.status(500).json({ message: 'Error fetching journal entry', error });
   }
 };
 
 // Update a journal entry by ID
-export const updateJournalEntry = async (req: Request, res: Response) => {
+export const updateJournalEntryHandler = async (req: Request, res: Response) => {
   try {
     const entryId = req.params.id;
-    const updatedEntry = await Journal.findByIdAndUpdate(entryId, req.body, { new: true });
+    const updatedEntry = await updateJournalEntryById(entryId, req.body); // Modify this function in your model
 
     if (!updatedEntry) {
       return res.status(404).json({ message: 'Journal entry not found' });
@@ -66,15 +69,16 @@ export const updateJournalEntry = async (req: Request, res: Response) => {
 
     res.status(200).json(updatedEntry);
   } catch (error) {
+    console.error('Error updating journal entry:', error);
     res.status(500).json({ message: 'Error updating journal entry', error });
   }
 };
 
 // Delete a journal entry by ID
-export const deleteJournalEntry = async (req: Request, res: Response) => {
+export const deleteJournalEntryHandler = async (req: Request, res: Response) => {
   try {
     const entryId = req.params.id;
-    const deletedEntry = await Journal.findByIdAndDelete(entryId);
+    const deletedEntry = await deleteJournalEntryById(entryId); // Modify this function in your model
 
     if (!deletedEntry) {
       return res.status(404).json({ message: 'Journal entry not found' });
@@ -82,6 +86,7 @@ export const deleteJournalEntry = async (req: Request, res: Response) => {
 
     res.status(200).json({ message: 'Journal entry deleted successfully' });
   } catch (error) {
+    console.error('Error deleting journal entry:', error);
     res.status(500).json({ message: 'Error deleting journal entry', error });
   }
 };
