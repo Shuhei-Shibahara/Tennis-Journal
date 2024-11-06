@@ -1,12 +1,14 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand, UpdateCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 
+// Initialize DynamoDB client and document client
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
 
+// Define the IJournal interface for the structure of journal entries
 export interface IJournal {
   userId: string;
-  entryId: string; // changed from id to entryId
+  entryId: string;
   date: string;
   opponent: string;
   tournamentName: string;
@@ -21,7 +23,7 @@ export interface IJournal {
 export const modelCreateJournalEntry = async (journalEntry: IJournal) => {
   const command = new PutCommand({
     TableName: 'Journal-Entries',
-    Item: journalEntry, // This now has entryId
+    Item: journalEntry,
   });
   await docClient.send(command);
 };
@@ -35,6 +37,7 @@ export const modelGetJournalEntriesByUserId = async (userId: string) => {
       ':userId': userId,
     },
   });
+
   const { Items } = await docClient.send(command);
   return Items as IJournal[];
 };
@@ -43,8 +46,9 @@ export const modelGetJournalEntriesByUserId = async (userId: string) => {
 export const modelGetJournalEntryById = async (userId: string, entryId: string) => {
   const command = new GetCommand({
     TableName: 'Journal-Entries',
-    Key: { userId, entryId }, // use entryId instead of id
+    Key: { userId, entryId },
   });
+
   const { Item } = await docClient.send(command);
   return Item as IJournal | null;
 };
@@ -53,7 +57,7 @@ export const modelGetJournalEntryById = async (userId: string, entryId: string) 
 export const modelUpdateJournalEntryById = async (userId: string, entryId: string, updates: Partial<IJournal>) => {
   const command = new UpdateCommand({
     TableName: 'Journal-Entries',
-    Key: { userId, entryId }, // use entryId instead of id
+    Key: { userId, entryId },
     UpdateExpression: 'set #date = :date, #opponent = :opponent, #tournamentName = :tournamentName, #location = :location, #courtSurface = :courtSurface, #strengths = :strengths, #weaknesses = :weaknesses, #lessonsLearned = :lessonsLearned',
     ExpressionAttributeNames: {
       '#date': 'date',
@@ -77,17 +81,21 @@ export const modelUpdateJournalEntryById = async (userId: string, entryId: strin
     },
     ReturnValues: 'ALL_NEW',
   });
-  const { Attributes } = await docClient.send(command);
-  return Attributes as IJournal | null;
-};
 
+  try {
+    const { Attributes } = await docClient.send(command);
+    return Attributes as IJournal | null;
+  } catch (error) {
+    console.error("Error updating journal entry:", error);
+    throw error;
+  }
+};
 
 // Delete a journal entry by ID
 export const modelDeleteJournalEntryById = async (userId: string, entryId: string) => {
   const command = new DeleteCommand({
     TableName: 'Journal-Entries',
-    Key: { userId, entryId }, // use entryId instead of id
+    Key: { userId, entryId },
   });
   await docClient.send(command);
 };
-

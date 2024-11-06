@@ -18,7 +18,12 @@ const createJournalEntry = (req, res) => __awaiter(void 0, void 0, void 0, funct
         if (!user || !user.userId) {
             return res.status(401).json({ message: 'Unauthorized' });
         }
-        // Create entryId using UUID instead of id
+        // Ensure required fields are provided
+        const { date, opponent, tournamentName, location, courtSurface, strengths, weaknesses, lessonsLearned } = req.body;
+        if (!date || !opponent || !tournamentName || !location || !courtSurface || !strengths || !weaknesses || !lessonsLearned) {
+            return res.status(400).json({ message: 'Missing required fields' });
+        }
+        // Create entryId using UUID for uniqueness
         const journalData = Object.assign(Object.assign({}, req.body), { userId: user.userId, entryId: (0, uuid_1.v4)() });
         // Pass journalData with entryId to modelCreateJournalEntry
         yield (0, Journal_1.modelCreateJournalEntry)(journalData);
@@ -51,7 +56,7 @@ const getJournalEntryById = (req, res) => __awaiter(void 0, void 0, void 0, func
         if (!user || !user.userId) {
             return res.status(401).json({ message: 'Unauthorized' });
         }
-        const { entryId } = req.params; // Using entryId instead of id
+        const { entryId } = req.params;
         const journal = yield (0, Journal_1.modelGetJournalEntryById)(user.userId, entryId);
         if (!journal) {
             return res.status(404).json({ message: 'Journal entry not found' });
@@ -70,8 +75,9 @@ const updateJournalEntryById = (req, res) => __awaiter(void 0, void 0, void 0, f
         if (!user || !user.userId) {
             return res.status(401).json({ message: 'Unauthorized' });
         }
-        const { entryId } = req.params; // Using entryId instead of id
+        const { entryId } = req.params;
         const updates = req.body;
+        // Ensure you're passing the userId and entryId as keys for the update operation
         const updatedJournal = yield (0, Journal_1.modelUpdateJournalEntryById)(user.userId, entryId, updates);
         if (!updatedJournal) {
             return res.status(404).json({ message: 'Journal entry not found' });
@@ -90,7 +96,8 @@ const deleteJournalEntryById = (req, res) => __awaiter(void 0, void 0, void 0, f
         if (!user || !user.userId) {
             return res.status(401).json({ message: 'Unauthorized' });
         }
-        const { entryId } = req.params; // Using entryId instead of id
+        const { entryId } = req.params;
+        // Ensure you're passing the userId and entryId for deletion
         yield (0, Journal_1.modelDeleteJournalEntryById)(user.userId, entryId);
         res.status(200).json({ message: 'Journal entry deleted' });
     }

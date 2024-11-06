@@ -15,8 +15,19 @@ export const createJournalEntry = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    // Create entryId using UUID instead of id
-    const journalData = { ...req.body, userId: user.userId, entryId: uuidv4() };
+    // Ensure required fields are provided
+    const { date, opponent, tournamentName, location, courtSurface, strengths, weaknesses, lessonsLearned } = req.body;
+
+    if (!date || !opponent || !tournamentName || !location || !courtSurface || !strengths || !weaknesses || !lessonsLearned) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    // Create entryId using UUID for uniqueness
+    const journalData = {
+      ...req.body,
+      userId: user.userId,
+      entryId: uuidv4()
+    };
 
     // Pass journalData with entryId to modelCreateJournalEntry
     await modelCreateJournalEntry(journalData);
@@ -50,7 +61,7 @@ export const getJournalEntryById = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const { entryId } = req.params;  // Using entryId instead of id
+    const { entryId } = req.params;
     const journal = await modelGetJournalEntryById(user.userId, entryId);
 
     if (!journal) {
@@ -71,8 +82,10 @@ export const updateJournalEntryById = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const { entryId } = req.params; // Using entryId instead of id
+    const { entryId } = req.params;
     const updates = req.body;
+
+    // Ensure you're passing the userId and entryId as keys for the update operation
     const updatedJournal = await modelUpdateJournalEntryById(user.userId, entryId, updates);
 
     if (!updatedJournal) {
@@ -93,7 +106,9 @@ export const deleteJournalEntryById = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const { entryId } = req.params; // Using entryId instead of id
+    const { entryId } = req.params;
+
+    // Ensure you're passing the userId and entryId for deletion
     await modelDeleteJournalEntryById(user.userId, entryId);
     res.status(200).json({ message: 'Journal entry deleted' });
   } catch (error) {
