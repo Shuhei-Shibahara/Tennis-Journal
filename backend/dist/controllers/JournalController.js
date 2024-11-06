@@ -18,7 +18,9 @@ const createJournalEntry = (req, res) => __awaiter(void 0, void 0, void 0, funct
         if (!user || !user.userId) {
             return res.status(401).json({ message: 'Unauthorized' });
         }
-        const journalData = Object.assign(Object.assign({}, req.body), { userId: user.userId, id: (0, uuid_1.v4)() });
+        // Create entryId using UUID instead of id
+        const journalData = Object.assign(Object.assign({}, req.body), { userId: user.userId, entryId: (0, uuid_1.v4)() });
+        // Pass journalData with entryId to modelCreateJournalEntry
         yield (0, Journal_1.modelCreateJournalEntry)(journalData);
         res.status(201).json({ message: 'Journal entry created', journal: journalData });
     }

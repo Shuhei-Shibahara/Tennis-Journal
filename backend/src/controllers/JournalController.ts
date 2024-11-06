@@ -15,8 +15,12 @@ export const createJournalEntry = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const journalData = { ...req.body, userId: user.userId, id: uuidv4() };
+    // Create entryId using UUID instead of id
+    const journalData = { ...req.body, userId: user.userId, entryId: uuidv4() };
+
+    // Pass journalData with entryId to modelCreateJournalEntry
     await modelCreateJournalEntry(journalData);
+
     res.status(201).json({ message: 'Journal entry created', journal: journalData });
   } catch (error) {
     console.error('Error creating journal entry:', error);

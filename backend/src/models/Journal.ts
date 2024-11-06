@@ -6,7 +6,7 @@ const docClient = DynamoDBDocumentClient.from(client);
 
 export interface IJournal {
   userId: string;
-  id: string;
+  entryId: string; // changed from id to entryId
   date: string;
   opponent: string;
   tournamentName: string;
@@ -21,7 +21,7 @@ export interface IJournal {
 export const modelCreateJournalEntry = async (journalEntry: IJournal) => {
   const command = new PutCommand({
     TableName: 'Journal-Entries',
-    Item: journalEntry,
+    Item: journalEntry, // This now has entryId
   });
   await docClient.send(command);
 };
@@ -40,20 +40,20 @@ export const modelGetJournalEntriesByUserId = async (userId: string) => {
 };
 
 // Get a specific journal entry by ID
-export const modelGetJournalEntryById = async (userId: string, id: string) => {
+export const modelGetJournalEntryById = async (userId: string, entryId: string) => {
   const command = new GetCommand({
     TableName: 'Journal-Entries',
-    Key: { userId, id },
+    Key: { userId, entryId }, // use entryId instead of id
   });
   const { Item } = await docClient.send(command);
   return Item as IJournal | null;
 };
 
 // Update a journal entry by ID
-export const modelUpdateJournalEntryById = async (userId: string, id: string, updates: Partial<IJournal>) => {
+export const modelUpdateJournalEntryById = async (userId: string, entryId: string, updates: Partial<IJournal>) => {
   const command = new UpdateCommand({
     TableName: 'Journal-Entries',
-    Key: { userId, id },
+    Key: { userId, entryId }, // use entryId instead of id
     UpdateExpression: 'set #date = :date, #opponent = :opponent, #tournamentName = :tournamentName, #location = :location, #courtSurface = :courtSurface, #strengths = :strengths, #weaknesses = :weaknesses, #lessonsLearned = :lessonsLearned',
     ExpressionAttributeNames: {
       '#date': 'date',
@@ -81,11 +81,13 @@ export const modelUpdateJournalEntryById = async (userId: string, id: string, up
   return Attributes as IJournal | null;
 };
 
+
 // Delete a journal entry by ID
-export const modelDeleteJournalEntryById = async (userId: string, id: string) => {
+export const modelDeleteJournalEntryById = async (userId: string, entryId: string) => {
   const command = new DeleteCommand({
     TableName: 'Journal-Entries',
-    Key: { userId, id },
+    Key: { userId, entryId }, // use entryId instead of id
   });
   await docClient.send(command);
 };
+
