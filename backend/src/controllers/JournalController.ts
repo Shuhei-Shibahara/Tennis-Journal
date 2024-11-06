@@ -50,8 +50,8 @@ export const getJournalEntryById = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const { id } = req.params;
-    const journal = await modelGetJournalEntryById(user.userId, id);
+    const { entryId } = req.params;  // Using entryId instead of id
+    const journal = await modelGetJournalEntryById(user.userId, entryId);
 
     if (!journal) {
       return res.status(404).json({ message: 'Journal entry not found' });
@@ -71,9 +71,9 @@ export const updateJournalEntryById = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const { id } = req.params;
+    const { entryId } = req.params; // Using entryId instead of id
     const updates = req.body;
-    const updatedJournal = await modelUpdateJournalEntryById(user.userId, id, updates);
+    const updatedJournal = await modelUpdateJournalEntryById(user.userId, entryId, updates);
 
     if (!updatedJournal) {
       return res.status(404).json({ message: 'Journal entry not found' });
@@ -93,8 +93,8 @@ export const deleteJournalEntryById = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const { id } = req.params;
-    await modelDeleteJournalEntryById(user.userId, id);
+    const { entryId } = req.params; // Using entryId instead of id
+    await modelDeleteJournalEntryById(user.userId, entryId);
     res.status(200).json({ message: 'Journal entry deleted' });
   } catch (error) {
     console.error('Error deleting journal entry:', error);

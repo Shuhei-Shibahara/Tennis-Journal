@@ -7,10 +7,16 @@ const express_1 = __importDefault(require("express"));
 const authMiddleware_1 = __importDefault(require("../middlewares/authMiddleware"));
 const JournalController_1 = require("../controllers/JournalController");
 const router = express_1.default.Router();
-router.use(authMiddleware_1.default); // Apply auth middleware to all journal routes
+// Apply auth middleware to all journal routes
+router.use(authMiddleware_1.default);
+// Create a journal entry
 router.post('/', JournalController_1.createJournalEntry);
-router.get('/', JournalController_1.getJournalEntriesByUserId);
+// Get journal entries by userId (change this to use userId in the path)
+router.get('/user/:userId', JournalController_1.getJournalEntriesByUserId); // This is the new route for fetching by userId
+// Get a specific journal entry by id
 router.get('/:id', JournalController_1.getJournalEntryById);
+// Update a journal entry by id
 router.put('/:id', JournalController_1.updateJournalEntryById);
+// Delete a journal entry by id
 router.delete('/:id', JournalController_1.deleteJournalEntryById);
 exports.default = router;

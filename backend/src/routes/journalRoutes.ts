@@ -10,12 +10,22 @@ import {
 
 const router = express.Router();
 
-router.use(authMiddleware); // Apply auth middleware to all journal routes
+// Apply auth middleware to all journal routes
+router.use(authMiddleware);
 
+// Create a journal entry
 router.post('/', createJournalEntry);
-router.get('/', getJournalEntriesByUserId);
+
+// Get journal entries by userId (change this to use userId in the path)
+router.get('/user/:userId', getJournalEntriesByUserId);  // This is the new route for fetching by userId
+
+// Get a specific journal entry by id
 router.get('/:id', getJournalEntryById);
+
+// Update a journal entry by id
 router.put('/:id', updateJournalEntryById);
+
+// Delete a journal entry by id
 router.delete('/:id', deleteJournalEntryById);
 
 export default router;
