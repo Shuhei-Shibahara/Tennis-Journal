@@ -40,4 +40,4 @@ app.listen(PORT, () => {
 // routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', authMiddleware, userRoutes);
-app.use('/api/journals', authMiddleware, journalRoutes);
+app.use('/api/journals', journalRoutes);

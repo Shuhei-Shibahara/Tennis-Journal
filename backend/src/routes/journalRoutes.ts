@@ -1,4 +1,5 @@
 import express from 'express';
+import authMiddleware from '../middlewares/authMiddleware';
 import {
   createJournalEntry,
   getJournalEntriesByUserId,
@@ -9,20 +10,12 @@ import {
 
 const router = express.Router();
 
-// Create a new entry
+router.use(authMiddleware); // Apply auth middleware to all journal routes
+
 router.post('/', createJournalEntry);
-
-// Get all entries for a specific user
-router.get('/user/:userId', getJournalEntriesByUserId);
-
-// Get a specific entry by ID
+router.get('/', getJournalEntriesByUserId);
 router.get('/:id', getJournalEntryById);
-
-// Update an entry by ID
 router.put('/:id', updateJournalEntryById);
-
-// Delete an entry by ID
 router.delete('/:id', deleteJournalEntryById);
 
 export default router;
-

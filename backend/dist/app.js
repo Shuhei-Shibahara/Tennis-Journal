@@ -37,4 +37,4 @@ app.listen(PORT, () => {
 // routes
 app.use('/api/auth', authRoutes_1.default);
 app.use('/api/users', authMiddleware_1.default, userRoutes_1.default);
-app.use('/api/journals', authMiddleware_1.default, journalRoutes_1.default);
+app.use('/api/journals', journalRoutes_1.default);

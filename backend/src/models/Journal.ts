@@ -20,7 +20,7 @@ export interface IJournal {
 // Create a new journal entry
 export const modelCreateJournalEntry = async (journalEntry: IJournal) => {
   const command = new PutCommand({
-    TableName: 'JournalEntries',
+    TableName: 'Journal-Entries',
     Item: journalEntry,
   });
   await docClient.send(command);
@@ -29,7 +29,7 @@ export const modelCreateJournalEntry = async (journalEntry: IJournal) => {
 // Get all journal entries for a specific user
 export const modelGetJournalEntriesByUserId = async (userId: string) => {
   const command = new QueryCommand({
-    TableName: 'JournalEntries',
+    TableName: 'Journal-Entries',
     KeyConditionExpression: 'userId = :userId',
     ExpressionAttributeValues: {
       ':userId': userId,
@@ -42,7 +42,7 @@ export const modelGetJournalEntriesByUserId = async (userId: string) => {
 // Get a specific journal entry by ID
 export const modelGetJournalEntryById = async (userId: string, id: string) => {
   const command = new GetCommand({
-    TableName: 'JournalEntries',
+    TableName: 'Journal-Entries',
     Key: { userId, id },
   });
   const { Item } = await docClient.send(command);
@@ -52,7 +52,7 @@ export const modelGetJournalEntryById = async (userId: string, id: string) => {
 // Update a journal entry by ID
 export const modelUpdateJournalEntryById = async (userId: string, id: string, updates: Partial<IJournal>) => {
   const command = new UpdateCommand({
-    TableName: 'JournalEntries',
+    TableName: 'Journal-Entries',
     Key: { userId, id },
     UpdateExpression: 'set #date = :date, #opponent = :opponent, #tournamentName = :tournamentName, #location = :location, #courtSurface = :courtSurface, #strengths = :strengths, #weaknesses = :weaknesses, #lessonsLearned = :lessonsLearned',
     ExpressionAttributeNames: {
@@ -84,7 +84,7 @@ export const modelUpdateJournalEntryById = async (userId: string, id: string, up
 // Delete a journal entry by ID
 export const modelDeleteJournalEntryById = async (userId: string, id: string) => {
   const command = new DeleteCommand({
-    TableName: 'JournalEntries',
+    TableName: 'Journal-Entries',
     Key: { userId, id },
   });
   await docClient.send(command);

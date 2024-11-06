@@ -12,95 +12,89 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteJournalEntryById = exports.updateJournalEntryById = exports.getJournalEntryById = exports.getJournalEntriesByUserId = exports.createJournalEntry = void 0;
 const uuid_1 = require("uuid");
 const Journal_1 = require("../models/Journal");
-// Create a new journal entry
 const createJournalEntry = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
     try {
-        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
-        if (!userId) {
-            return res.status(401).json({ error: 'Unauthorized' });
+        const user = req.user;
+        if (!user || !user.userId) {
+            return res.status(401).json({ message: 'Unauthorized' });
         }
-        const entry = Object.assign(Object.assign({}, req.body), { id: (0, uuid_1.v4)(), userId });
-        yield (0, Journal_1.modelCreateJournalEntry)(entry);
-        res.status(201).json(entry);
+        const journalData = Object.assign(Object.assign({}, req.body), { userId: user.userId, id: (0, uuid_1.v4)() });
+        yield (0, Journal_1.modelCreateJournalEntry)(journalData);
+        res.status(201).json({ message: 'Journal entry created', journal: journalData });
     }
     catch (error) {
         console.error('Error creating journal entry:', error);
-        res.status(500).json({ error: 'Failed to create journal entry' });
+        res.status(500).json({ message: 'Failed to create journal entry' });
     }
 });
 exports.createJournalEntry = createJournalEntry;
-// Get all journal entries for the authenticated user
 const getJournalEntriesByUserId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const userId = req.params.userId;
     try {
-        const entries = yield (0, Journal_1.modelGetJournalEntriesByUserId)(userId);
-        res.status(200).json(entries);
+        const user = req.user;
+        if (!user || !user.userId) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
+        const journals = yield (0, Journal_1.modelGetJournalEntriesByUserId)(user.userId);
+        res.json(journals);
     }
     catch (error) {
         console.error('Error fetching journal entries:', error);
-        res.status(500).json({ error: 'Failed to fetch journal entries' });
+        res.status(500).json({ message: 'Failed to fetch journal entries' });
     }
 });
 exports.getJournalEntriesByUserId = getJournalEntriesByUserId;
-// Get a specific journal entry by ID
 const getJournalEntryById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
     try {
-        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+        const user = req.user;
+        if (!user || !user.userId) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
         const { id } = req.params;
-        if (!userId) {
-            return res.status(401).json({ error: 'Unauthorized' });
+        const journal = yield (0, Journal_1.modelGetJournalEntryById)(user.userId, id);
+        if (!journal) {
+            return res.status(404).json({ message: 'Journal entry not found' });
         }
-        const entry = yield (0, Journal_1.modelGetJournalEntryById)(userId, id);
-        if (!entry) {
-            return res.status(404).json({ error: 'Entry not found' });
-        }
-        res.status(200).json(entry);
+        res.json(journal);
     }
     catch (error) {
         console.error('Error fetching journal entry:', error);
-        res.status(500).json({ error: 'Failed to fetch journal entry' });
+        res.status(500).json({ message: 'Failed to fetch journal entry' });
     }
 });
 exports.getJournalEntryById = getJournalEntryById;
-// Update a journal entry by ID
 const updateJournalEntryById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
     try {
-        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+        const user = req.user;
+        if (!user || !user.userId) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
         const { id } = req.params;
         const updates = req.body;
-        if (!userId) {
-            return res.status(401).json({ error: 'Unauthorized' });
+        const updatedJournal = yield (0, Journal_1.modelUpdateJournalEntryById)(user.userId, id, updates);
+        if (!updatedJournal) {
+            return res.status(404).json({ message: 'Journal entry not found' });
         }
-        const updatedEntry = yield (0, Journal_1.modelUpdateJournalEntryById)(userId, id, updates);
-        if (!updatedEntry) {
-            return res.status(404).json({ error: 'Entry not found' });
-        }
-        res.status(200).json(updatedEntry);
+        res.json(updatedJournal);
     }
     catch (error) {
         console.error('Error updating journal entry:', error);
-        res.status(500).json({ error: 'Failed to update journal entry' });
+        res.status(500).json({ message: 'Failed to update journal entry' });
     }
 });
 exports.updateJournalEntryById = updateJournalEntryById;
-// Delete a journal entry by ID
 const deleteJournalEntryById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
     try {
-        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
-        const { id } = req.params;
-        if (!userId) {
-            return res.status(401).json({ error: 'Unauthorized' });
+        const user = req.user;
+        if (!user || !user.userId) {
+            return res.status(401).json({ message: 'Unauthorized' });
         }
-        yield (0, Journal_1.modelDeleteJournalEntryById)(userId, id);
-        res.status(200).json({ message: 'Entry deleted successfully' });
+        const { id } = req.params;
+        yield (0, Journal_1.modelDeleteJournalEntryById)(user.userId, id);
+        res.status(200).json({ message: 'Journal entry deleted' });
     }
     catch (error) {
         console.error('Error deleting journal entry:', error);
-        res.status(500).json({ error: 'Failed to delete journal entry' });
+        res.status(500).json({ message: 'Failed to delete journal entry' });
     }
 });
 exports.deleteJournalEntryById = deleteJournalEntryById;
