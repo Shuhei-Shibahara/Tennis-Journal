@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faWrench, faSave } from '@fortawesome/free-solid-svg-icons';
 
 interface JournalEntry {
-  entryId: string; // Changed from _id to entryId
+  entryId: string;
   date: string;
   opponent: string;
   tournamentName: string;
@@ -20,13 +20,13 @@ interface JournalEntry {
 const JournalEntries: React.FC = () => {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [error, setError] = useState<string>('');
-  const [editingEntryId, setEditingEntryId] = useState<string | null>(null); // Track the entryId of the entry being edited
+  const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<JournalEntry>>({});
   const userId = useSelector((state: RootState) => state.session.user?.userId);
 
   useEffect(() => {
     const fetchEntries = async () => {
-      if (!userId) return; // Early return if userId is not available
+      if (!userId) return;
       try {
         const token = localStorage.getItem('token');
         const response = await axios.get(`http://localhost:5000/api/journals/user/${userId}`, {
@@ -34,6 +34,7 @@ const JournalEntries: React.FC = () => {
             Authorization: `Bearer ${token}`,
           },
         });
+        console.log('Fetched Entries:', response.data); // Log fetched entries
         setEntries(response.data);
       } catch (error: any) {
         console.error('Error fetching journal entries:', error);
@@ -46,17 +47,18 @@ const JournalEntries: React.FC = () => {
   }, [userId]);
 
   const handleEdit = (entry: JournalEntry) => {
-    setEditingEntryId(entry.entryId); // Set the entryId being edited
-    setEditForm({ ...entry }); // Set the form fields to the current entry
+    console.log('Editing Entry ID:', entry.entryId); // Log the entryId being edited
+    setEditingEntryId(entry.entryId);
+    setEditForm({ ...entry });
   };
 
   const handleSave = async (entryId: string) => {
+    console.log('Saving Entry ID:', entryId); // Log the entryId when saving
     try {
       const token = localStorage.getItem('token');
-      // Merge the editForm with the full entry data
       const updatedEntry = { ...entries.find(entry => entry.entryId === entryId), ...editForm };
 
-      console.log('Updated entry:', updatedEntry); // Log the data being sent to the backend
+      console.log('Updated entry:', updatedEntry);
 
       const response = await axios.put(
         `http://localhost:5000/api/journals/${entryId}`,
@@ -69,7 +71,7 @@ const JournalEntries: React.FC = () => {
       );
       if (response.status === 200) {
         setEntries(entries.map((entry) => (entry.entryId === entryId ? { ...entry, ...editForm } : entry)));
-        setEditingEntryId(null); // Close the edit mode after saving
+        setEditingEntryId(null);
         setEditForm({});
       }
     } catch (error: any) {
@@ -83,6 +85,7 @@ const JournalEntries: React.FC = () => {
   };
 
   const handleDelete = async (entryId: string) => {
+    console.log('Deleting Entry ID:', entryId); // Log the entryId when deleting
     try {
       const token = localStorage.getItem('token');
       const response = await axios.delete(`http://localhost:5000/api/journals/${entryId}`, {
@@ -92,7 +95,7 @@ const JournalEntries: React.FC = () => {
       });
 
       if (response.status === 200) {
-        setEntries(entries.filter((entry) => entry.entryId !== entryId)); // Remove the deleted entry from the state
+        setEntries(entries.filter((entry) => entry.entryId !== entryId));
       }
     } catch (error: any) {
       console.error('Error deleting entry:', error);
@@ -109,7 +112,7 @@ const JournalEntries: React.FC = () => {
         {entries.map((entry) => (
           <li key={entry.entryId} className="p-6 bg-white border-2 border-gray-300 rounded-lg shadow-lg relative flex justify-between items-center">
             <div className="flex-grow">
-              {editingEntryId === entry.entryId ? ( // Only show the edit form for the selected entry
+              {editingEntryId === entry.entryId ? (
                 <div className="space-y-4">
                   {Object.keys(editForm).map((key) => (
                     <div key={key} className="mb-2">

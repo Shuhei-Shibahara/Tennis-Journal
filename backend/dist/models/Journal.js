@@ -87,10 +87,12 @@ const modelUpdateJournalEntryById = (userId, entryId, updates) => __awaiter(void
 exports.modelUpdateJournalEntryById = modelUpdateJournalEntryById;
 // Delete a journal entry by ID
 const modelDeleteJournalEntryById = (userId, entryId) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(`Attempting to delete journal entry with userId: ${userId} and entryId: ${entryId}`);
     const command = new lib_dynamodb_1.DeleteCommand({
         TableName: 'Journal-Entries',
         Key: { userId, entryId },
     });
     yield docClient.send(command);
+    console.log(`Successfully deleted entry with userId: ${userId} and entryId: ${entryId}`);
 });
 exports.modelDeleteJournalEntryById = modelDeleteJournalEntryById;

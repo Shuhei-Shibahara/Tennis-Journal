@@ -75,10 +75,10 @@ const updateJournalEntryById = (req, res) => __awaiter(void 0, void 0, void 0, f
         if (!user || !user.userId) {
             return res.status(401).json({ message: 'Unauthorized' });
         }
-        const { entryId } = req.params;
+        const { id } = req.params;
         const updates = req.body;
-        // Ensure you're passing the userId and entryId as keys for the update operation
-        const updatedJournal = yield (0, Journal_1.modelUpdateJournalEntryById)(user.userId, entryId, updates);
+        // Ensure you're passing the userId and id as keys for the update operation
+        const updatedJournal = yield (0, Journal_1.modelUpdateJournalEntryById)(user.userId, id, updates);
         if (!updatedJournal) {
             return res.status(404).json({ message: 'Journal entry not found' });
         }
@@ -96,9 +96,8 @@ const deleteJournalEntryById = (req, res) => __awaiter(void 0, void 0, void 0, f
         if (!user || !user.userId) {
             return res.status(401).json({ message: 'Unauthorized' });
         }
-        const { entryId } = req.params;
-        // Ensure you're passing the userId and entryId for deletion
-        yield (0, Journal_1.modelDeleteJournalEntryById)(user.userId, entryId);
+        const { id } = req.params;
+        yield (0, Journal_1.modelDeleteJournalEntryById)(user.userId, id);
         res.status(200).json({ message: 'Journal entry deleted' });
     }
     catch (error) {

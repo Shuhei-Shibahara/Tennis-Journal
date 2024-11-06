@@ -93,9 +93,11 @@ export const modelUpdateJournalEntryById = async (userId: string, entryId: strin
 
 // Delete a journal entry by ID
 export const modelDeleteJournalEntryById = async (userId: string, entryId: string) => {
+  console.log(`Attempting to delete journal entry with userId: ${userId} and entryId: ${entryId}`);
   const command = new DeleteCommand({
     TableName: 'Journal-Entries',
     Key: { userId, entryId },
   });
   await docClient.send(command);
+  console.log(`Successfully deleted entry with userId: ${userId} and entryId: ${entryId}`);
 };
