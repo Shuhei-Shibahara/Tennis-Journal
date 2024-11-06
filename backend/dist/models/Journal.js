@@ -9,49 +9,48 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteJournalEntryById = exports.updateJournalEntryById = exports.getJournalEntryById = exports.getJournalEntriesByUserId = exports.createJournalEntry = void 0;
+exports.modelDeleteJournalEntryById = exports.modelUpdateJournalEntryById = exports.modelGetJournalEntryById = exports.modelGetJournalEntriesByUserId = exports.modelCreateJournalEntry = void 0;
 const client_dynamodb_1 = require("@aws-sdk/client-dynamodb");
 const lib_dynamodb_1 = require("@aws-sdk/lib-dynamodb");
-// Create a DynamoDB client
 const client = new client_dynamodb_1.DynamoDBClient({});
 const docClient = lib_dynamodb_1.DynamoDBDocumentClient.from(client);
 // Create a new journal entry
-const createJournalEntry = (journalEntry) => __awaiter(void 0, void 0, void 0, function* () {
+const modelCreateJournalEntry = (journalEntry) => __awaiter(void 0, void 0, void 0, function* () {
     const command = new lib_dynamodb_1.PutCommand({
-        TableName: 'JournalEntries', // Replace with your actual DynamoDB table name
+        TableName: 'JournalEntries',
         Item: journalEntry,
     });
     yield docClient.send(command);
 });
-exports.createJournalEntry = createJournalEntry;
+exports.modelCreateJournalEntry = modelCreateJournalEntry;
 // Get all journal entries for a specific user
-const getJournalEntriesByUserId = (userId) => __awaiter(void 0, void 0, void 0, function* () {
+const modelGetJournalEntriesByUserId = (userId) => __awaiter(void 0, void 0, void 0, function* () {
     const command = new lib_dynamodb_1.QueryCommand({
-        TableName: 'YourJournalTableName', // Replace with your actual DynamoDB table name
+        TableName: 'JournalEntries',
         KeyConditionExpression: 'userId = :userId',
         ExpressionAttributeValues: {
             ':userId': userId,
         },
     });
     const { Items } = yield docClient.send(command);
-    return Items; // Return all entries for the user
+    return Items;
 });
-exports.getJournalEntriesByUserId = getJournalEntriesByUserId;
+exports.modelGetJournalEntriesByUserId = modelGetJournalEntriesByUserId;
 // Get a specific journal entry by ID
-const getJournalEntryById = (id) => __awaiter(void 0, void 0, void 0, function* () {
+const modelGetJournalEntryById = (userId, id) => __awaiter(void 0, void 0, void 0, function* () {
     const command = new lib_dynamodb_1.GetCommand({
-        TableName: 'YourJournalTableName', // Replace with your actual DynamoDB table name
-        Key: { id }, // Assuming the partition key is 'id'
+        TableName: 'JournalEntries',
+        Key: { userId, id },
     });
     const { Item } = yield docClient.send(command);
-    return Item; // Return the entry or null if not found
+    return Item;
 });
-exports.getJournalEntryById = getJournalEntryById;
+exports.modelGetJournalEntryById = modelGetJournalEntryById;
 // Update a journal entry by ID
-const updateJournalEntryById = (id, updates) => __awaiter(void 0, void 0, void 0, function* () {
+const modelUpdateJournalEntryById = (userId, id, updates) => __awaiter(void 0, void 0, void 0, function* () {
     const command = new lib_dynamodb_1.UpdateCommand({
-        TableName: 'YourJournalTableName', // Replace with your actual DynamoDB table name
-        Key: { id },
+        TableName: 'JournalEntries',
+        Key: { userId, id },
         UpdateExpression: 'set #date = :date, #opponent = :opponent, #tournamentName = :tournamentName, #location = :location, #courtSurface = :courtSurface, #strengths = :strengths, #weaknesses = :weaknesses, #lessonsLearned = :lessonsLearned',
         ExpressionAttributeNames: {
             '#date': 'date',
@@ -76,16 +75,15 @@ const updateJournalEntryById = (id, updates) => __awaiter(void 0, void 0, void 0
         ReturnValues: 'ALL_NEW',
     });
     const { Attributes } = yield docClient.send(command);
-    return Attributes; // Return the updated entry
+    return Attributes;
 });
-exports.updateJournalEntryById = updateJournalEntryById;
+exports.modelUpdateJournalEntryById = modelUpdateJournalEntryById;
 // Delete a journal entry by ID
-const deleteJournalEntryById = (id) => __awaiter(void 0, void 0, void 0, function* () {
+const modelDeleteJournalEntryById = (userId, id) => __awaiter(void 0, void 0, void 0, function* () {
     const command = new lib_dynamodb_1.DeleteCommand({
-        TableName: 'YourJournalTableName', // Replace with your actual DynamoDB table name
-        Key: { id },
+        TableName: 'JournalEntries',
+        Key: { userId, id },
     });
     yield docClient.send(command);
-    return { message: 'Journal entry deleted successfully' }; // Return success message
 });
-exports.deleteJournalEntryById = deleteJournalEntryById;
+exports.modelDeleteJournalEntryById = modelDeleteJournalEntryById;

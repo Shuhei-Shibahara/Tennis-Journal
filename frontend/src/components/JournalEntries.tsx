@@ -14,16 +14,15 @@ const JournalEntries: React.FC = () => {
 
   useEffect(() => {
     const fetchEntries = async () => {
+      if (!userId) return; // Early return if userId is not available
       try {
-        if (userId) {
-          const token = localStorage.getItem('token');
-          const response = await axios.get(`http://localhost:5000/api/journals/user/${userId}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          setEntries(response.data);
-        }
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`http://localhost:5000/api/journals/user/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setEntries(response.data);
       } catch (error: any) {
         console.error('Error fetching journal entries:', error);
         setError('Failed to fetch journal entries.');
@@ -34,16 +33,7 @@ const JournalEntries: React.FC = () => {
 
   const handleEdit = (entry: any) => {
     setEditingEntryId(entry._id);
-    setEditForm({
-      tournamentName: entry.tournamentName,
-      date: entry.date,
-      opponent: entry.opponent,
-      location: entry.location,
-      courtSurface: entry.courtSurface,
-      strengths: entry.strengths,
-      weaknesses: entry.weaknesses,
-      lessonsLearned: entry.lessonsLearned,
-    });
+    setEditForm({ ...entry }); // Set edit form to the current entry
   };
 
   const handleSave = async (entryId: string) => {
@@ -92,7 +82,6 @@ const JournalEntries: React.FC = () => {
           <li key={entry._id} className="p-6 bg-white border-2 border-gray-300 rounded-lg shadow-lg relative flex justify-between items-center">
             <div className="flex-grow">
               {editingEntryId === entry._id ? (
-                // Render form fields with labels for editing
                 <div className="space-y-4">
                   {Object.keys(editForm).map((key) => (
                     <div key={key} className="mb-2">
@@ -110,39 +99,30 @@ const JournalEntries: React.FC = () => {
                   </button>
                 </div>
               ) : (
-                // Display entry details
-                <>
-                  <h3 className="text-2xl font-serif mb-2 text-purple-700 underline">{entry.tournamentName}</h3>
-                  <p className="text-gray-500">Entry ID: {entry._id}</p>
-                  <p><strong className="font-semibold">Date:</strong> {new Date(entry.date).toLocaleDateString()}</p>
-                  <p><strong className="font-semibold">Opponent:</strong> {entry.opponent}</p>
-                  <p><strong className="font-semibold">Location:</strong> {entry.location}</p>
-                  <p><strong className="font-semibold">Court Surface:</strong> {entry.courtSurface}</p>
-                  <div className="flex space-x-4">
-                    <div>
-                      <p><strong className="font-semibold">Strengths:</strong></p>
-                      <p className="italic bg-green-50 p-2 rounded-md">{entry.strengths}</p>
-                    </div>
-                    <div>
-                      <p><strong className="font-semibold">Weaknesses:</strong></p>
-                      <p className="italic bg-red-50 p-2 rounded-md">{entry.weaknesses}</p>
-                    </div>
-                  </div>
-                  <p><strong className="font-semibold">Lessons Learned:</strong></p>
-                  <p className="italic bg-yellow-50 p-2 rounded-md">{entry.lessonsLearned}</p>
-                </>
+                <div>
+                  <h3 className="text-lg font-semibold">{entry.tournamentName}</h3>
+                  <p className="text-gray-600">Opponent: {entry.opponent}</p>
+                  <p className="text-gray-600">Date: {entry.date}</p>
+                  <p className="text-gray-600">Location: {entry.location}</p>
+                  <p className="text-gray-600">Court Surface: {entry.courtSurface}</p>
+                  <p className="text-gray-600">Strengths: {entry.strengths}</p>
+                  <p className="text-gray-600">Weaknesses: {entry.weaknesses}</p>
+                  <p className="text-gray-600">Lessons Learned: {entry.lessonsLearned}</p>
+                </div>
               )}
             </div>
-
-            {/* Right side: Edit and Delete icons */}
-            <div className="flex space-x-4">
-              {editingEntryId === entry._id ? null : (
-                <button onClick={() => handleEdit(entry)} className="text-blue-500 hover:text-blue-700">
-                  <FontAwesomeIcon icon={faWrench} size="lg" />
+            <div className="ml-4 flex-shrink-0">
+              {editingEntryId === entry._id ? (
+                <button onClick={() => setEditingEntryId(null)} className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+                  Cancel
+                </button>
+              ) : (
+                <button onClick={() => handleEdit(entry)} className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
+                  <FontAwesomeIcon icon={faWrench} /> Edit
                 </button>
               )}
-              <button onClick={() => handleDelete(entry._id)} className="text-red-500 hover:text-red-700">
-                <FontAwesomeIcon icon={faTrash} size="lg" />
+              <button onClick={() => handleDelete(entry._id)} className="ml-2 px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600">
+                <FontAwesomeIcon icon={faTrash} /> Delete
               </button>
             </div>
           </li>

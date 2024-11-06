@@ -9,90 +9,98 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteJournalEntryHandler = exports.updateJournalEntryHandler = exports.getJournalEntryByIdHandler = exports.getJournalEntriesHandler = exports.createJournalEntryHandler = void 0;
+exports.deleteJournalEntryById = exports.updateJournalEntryById = exports.getJournalEntryById = exports.getJournalEntriesByUserId = exports.createJournalEntry = void 0;
+const uuid_1 = require("uuid");
 const Journal_1 = require("../models/Journal");
 // Create a new journal entry
-const createJournalEntryHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const createJournalEntry = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
-        const { userId, date, opponent, tournamentName, location, courtSurface, strengths, weaknesses, lessonsLearned } = req.body;
-        const newJournalEntry = {
-            userId,
-            date,
-            opponent,
-            tournamentName,
-            location,
-            courtSurface,
-            strengths,
-            weaknesses,
-            lessonsLearned,
-        };
-        yield (0, Journal_1.createJournalEntry)(newJournalEntry);
-        res.status(201).json({ message: 'Journal entry created successfully' });
+        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+        const entry = Object.assign(Object.assign({}, req.body), { id: (0, uuid_1.v4)(), userId });
+        yield (0, Journal_1.modelCreateJournalEntry)(entry);
+        res.status(201).json(entry);
     }
     catch (error) {
         console.error('Error creating journal entry:', error);
-        res.status(500).json({ message: 'Error creating journal entry', error });
+        res.status(500).json({ error: 'Failed to create journal entry' });
     }
 });
-exports.createJournalEntryHandler = createJournalEntryHandler;
-// Get all journal entries for a specific user
-const getJournalEntriesHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.createJournalEntry = createJournalEntry;
+// Get all journal entries for the authenticated user
+const getJournalEntriesByUserId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userId = req.params.userId;
     try {
-        const entries = yield (0, Journal_1.getJournalEntriesByUserId)(userId); // Fetch entries for the user
-        return res.status(200).json(entries);
+        const entries = yield (0, Journal_1.modelGetJournalEntriesByUserId)(userId);
+        res.status(200).json(entries);
     }
     catch (error) {
         console.error('Error fetching journal entries:', error);
-        return res.status(500).json({ message: 'Failed to fetch journal entries' });
+        res.status(500).json({ error: 'Failed to fetch journal entries' });
     }
 });
-exports.getJournalEntriesHandler = getJournalEntriesHandler;
+exports.getJournalEntriesByUserId = getJournalEntriesByUserId;
 // Get a specific journal entry by ID
-const getJournalEntryByIdHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getJournalEntryById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
-        const entryId = req.params.id;
-        const journalEntry = yield (0, Journal_1.getJournalEntryById)(entryId); // Modify this function in your model
-        if (!journalEntry) {
-            return res.status(404).json({ message: 'Journal entry not found' });
+        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+        const { id } = req.params;
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized' });
         }
-        res.status(200).json(journalEntry);
+        const entry = yield (0, Journal_1.modelGetJournalEntryById)(userId, id);
+        if (!entry) {
+            return res.status(404).json({ error: 'Entry not found' });
+        }
+        res.status(200).json(entry);
     }
     catch (error) {
         console.error('Error fetching journal entry:', error);
-        res.status(500).json({ message: 'Error fetching journal entry', error });
+        res.status(500).json({ error: 'Failed to fetch journal entry' });
     }
 });
-exports.getJournalEntryByIdHandler = getJournalEntryByIdHandler;
+exports.getJournalEntryById = getJournalEntryById;
 // Update a journal entry by ID
-const updateJournalEntryHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const updateJournalEntryById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
-        const entryId = req.params.id;
-        const updatedEntry = yield (0, Journal_1.updateJournalEntryById)(entryId, req.body); // Modify this function in your model
+        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+        const { id } = req.params;
+        const updates = req.body;
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+        const updatedEntry = yield (0, Journal_1.modelUpdateJournalEntryById)(userId, id, updates);
         if (!updatedEntry) {
-            return res.status(404).json({ message: 'Journal entry not found' });
+            return res.status(404).json({ error: 'Entry not found' });
         }
         res.status(200).json(updatedEntry);
     }
     catch (error) {
         console.error('Error updating journal entry:', error);
-        res.status(500).json({ message: 'Error updating journal entry', error });
+        res.status(500).json({ error: 'Failed to update journal entry' });
     }
 });
-exports.updateJournalEntryHandler = updateJournalEntryHandler;
+exports.updateJournalEntryById = updateJournalEntryById;
 // Delete a journal entry by ID
-const deleteJournalEntryHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const deleteJournalEntryById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
-        const entryId = req.params.id;
-        const deletedEntry = yield (0, Journal_1.deleteJournalEntryById)(entryId); // Modify this function in your model
-        if (!deletedEntry) {
-            return res.status(404).json({ message: 'Journal entry not found' });
+        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+        const { id } = req.params;
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized' });
         }
-        res.status(200).json({ message: 'Journal entry deleted successfully' });
+        yield (0, Journal_1.modelDeleteJournalEntryById)(userId, id);
+        res.status(200).json({ message: 'Entry deleted successfully' });
     }
     catch (error) {
         console.error('Error deleting journal entry:', error);
-        res.status(500).json({ message: 'Error deleting journal entry', error });
+        res.status(500).json({ error: 'Failed to delete journal entry' });
     }
 });
-exports.deleteJournalEntryHandler = deleteJournalEntryHandler;
+exports.deleteJournalEntryById = deleteJournalEntryById;

@@ -1,14 +1,13 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommand, GetCommand, ScanCommand, UpdateCommand, DeleteCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand, UpdateCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
 
-// Create a DynamoDB client
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
 
-// Define the journal entry structure
 export interface IJournal {
-  userId: string; // Assuming userId is a string for DynamoDB
-  date: Date;
+  userId: string;
+  id: string;
+  date: string;
   opponent: string;
   tournamentName: string;
   location: string;
@@ -19,42 +18,42 @@ export interface IJournal {
 }
 
 // Create a new journal entry
-export const createJournalEntry = async (journalEntry: IJournal) => {
+export const modelCreateJournalEntry = async (journalEntry: IJournal) => {
   const command = new PutCommand({
-    TableName: 'JournalEntries', // Replace with your actual DynamoDB table name
+    TableName: 'JournalEntries',
     Item: journalEntry,
   });
   await docClient.send(command);
 };
 
 // Get all journal entries for a specific user
-export const getJournalEntriesByUserId = async (userId: string) => {
+export const modelGetJournalEntriesByUserId = async (userId: string) => {
   const command = new QueryCommand({
-    TableName: 'YourJournalTableName', // Replace with your actual DynamoDB table name
+    TableName: 'JournalEntries',
     KeyConditionExpression: 'userId = :userId',
     ExpressionAttributeValues: {
       ':userId': userId,
     },
   });
   const { Items } = await docClient.send(command);
-  return Items as IJournal[]; // Return all entries for the user
+  return Items as IJournal[];
 };
 
 // Get a specific journal entry by ID
-export const getJournalEntryById = async (id: string) => {
+export const modelGetJournalEntryById = async (userId: string, id: string) => {
   const command = new GetCommand({
-    TableName: 'YourJournalTableName', // Replace with your actual DynamoDB table name
-    Key: { id }, // Assuming the partition key is 'id'
+    TableName: 'JournalEntries',
+    Key: { userId, id },
   });
   const { Item } = await docClient.send(command);
-  return Item as IJournal | null; // Return the entry or null if not found
+  return Item as IJournal | null;
 };
 
 // Update a journal entry by ID
-export const updateJournalEntryById = async (id: string, updates: Partial<IJournal>) => {
+export const modelUpdateJournalEntryById = async (userId: string, id: string, updates: Partial<IJournal>) => {
   const command = new UpdateCommand({
-    TableName: 'YourJournalTableName', // Replace with your actual DynamoDB table name
-    Key: { id },
+    TableName: 'JournalEntries',
+    Key: { userId, id },
     UpdateExpression: 'set #date = :date, #opponent = :opponent, #tournamentName = :tournamentName, #location = :location, #courtSurface = :courtSurface, #strengths = :strengths, #weaknesses = :weaknesses, #lessonsLearned = :lessonsLearned',
     ExpressionAttributeNames: {
       '#date': 'date',
@@ -79,15 +78,14 @@ export const updateJournalEntryById = async (id: string, updates: Partial<IJourn
     ReturnValues: 'ALL_NEW',
   });
   const { Attributes } = await docClient.send(command);
-  return Attributes as IJournal | null; // Return the updated entry
+  return Attributes as IJournal | null;
 };
 
 // Delete a journal entry by ID
-export const deleteJournalEntryById = async (id: string) => {
+export const modelDeleteJournalEntryById = async (userId: string, id: string) => {
   const command = new DeleteCommand({
-    TableName: 'YourJournalTableName', // Replace with your actual DynamoDB table name
-    Key: { id },
+    TableName: 'JournalEntries',
+    Key: { userId, id },
   });
   await docClient.send(command);
-  return { message: 'Journal entry deleted successfully' }; // Return success message
 };
