@@ -53,7 +53,77 @@ const getUserJournals = (userId) => __awaiter(void 0, void 0, void 0, function* 
         throw error; // Handle or rethrow error as needed
     }
 });
-// Middleware to authenticate and fetch user data and journal entries
+// Function to create a new journal entry in DynamoDB
+const createJournalEntry = (journalData) => __awaiter(void 0, void 0, void 0, function* () {
+    const params = {
+        TableName: 'JournalEntries', // The correct table name
+        Item: journalData, // Journal entry data
+    };
+    try {
+        yield dynamoDB.send(new lib_dynamodb_1.PutCommand(params)); // Use the PutCommand to insert new entry
+        return journalData; // Return the newly created journal entry
+    }
+    catch (error) {
+        console.error('Error creating journal entry:', error);
+        throw error;
+    }
+});
+// Function to update an existing journal entry in DynamoDB
+const updateJournalEntry = (journalId, updatedData) => __awaiter(void 0, void 0, void 0, function* () {
+    // Prepare the attributes to update dynamically
+    const updateExpressionParts = [];
+    const expressionAttributeNames = {};
+    const expressionAttributeValues = {};
+    // Loop over the fields in updatedData and add to the update expression if they are present
+    Object.keys(updatedData).forEach((key) => {
+        if (updatedData[key] !== undefined) {
+            const attributeName = `#${key}`;
+            updateExpressionParts.push(`${attributeName} = :${key}`);
+            expressionAttributeNames[attributeName] = key;
+            expressionAttributeValues[`:${key}`] = updatedData[key];
+        }
+    });
+    // If no fields to update, return early (to avoid unnecessary database operation)
+    if (updateExpressionParts.length === 0) {
+        throw new Error('No fields to update');
+    }
+    // Construct the final update expression
+    const updateExpression = 'set ' + updateExpressionParts.join(', ');
+    const params = {
+        TableName: 'JournalEntries', // The correct table name
+        Key: { id: journalId }, // The partition key of the journal entry
+        UpdateExpression: updateExpression, // Dynamically generated update expression
+        ExpressionAttributeNames: expressionAttributeNames, // Attribute names
+        ExpressionAttributeValues: expressionAttributeValues, // Attribute values
+        ReturnValues: 'ALL_NEW', // Correctly set the return values to 'ALL_NEW'
+    };
+    try {
+        const { Attributes } = yield dynamoDB.send(new lib_dynamodb_1.UpdateCommand(params)); // Execute the update command
+        if (!Attributes) {
+            throw new Error('Journal entry not found');
+        }
+        return Attributes; // Return the updated journal entry
+    }
+    catch (error) {
+        console.error('Error updating journal entry:', error);
+        throw error; // Handle or rethrow error as needed
+    }
+});
+// Function to delete a journal entry from DynamoDB
+const deleteJournalEntry = (journalId) => __awaiter(void 0, void 0, void 0, function* () {
+    const params = {
+        TableName: 'JournalEntries', // The correct table name
+        Key: { journalId }, // The primary key of the journal entry to delete
+    };
+    try {
+        yield dynamoDB.send(new lib_dynamodb_1.DeleteCommand(params)); // Use the DeleteCommand to remove entry
+    }
+    catch (error) {
+        console.error('Error deleting journal entry:', error);
+        throw error;
+    }
+});
+// Middleware to authenticate and fetch user data and journal entries, with CRUD operations
 const authMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     const token = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split(' ')[1]; // Extract the token from Authorization header
@@ -83,7 +153,27 @@ const authMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
         // Attach user data and journals to the request object
         req.user = userData; // Attach user data to request
         req.journals = journals; // Attach journal entries to request
-        next(); // Proceed to the next middleware/route
+        // Handle POST, PUT, DELETE requests for journal entries
+        if (req.method === 'POST') {
+            // Create new journal entry
+            const journalData = req.body; // Assuming journal data is in the request body
+            const createdJournal = yield createJournalEntry(journalData);
+            return res.status(201).json({ message: 'Journal entry created', journal: createdJournal });
+        }
+        if (req.method === 'PUT') {
+            // Update an existing journal entry
+            const { journalId } = req.params; // Assuming journalId is passed in params
+            const updatedData = req.body; // Get updated journal data from request body
+            const updatedJournal = yield updateJournalEntry(journalId, updatedData);
+            return res.status(200).json({ message: 'Journal entry updated', journal: updatedJournal });
+        }
+        if (req.method === 'DELETE') {
+            // Delete a journal entry
+            const { journalId } = req.params; // Assuming journalId is passed in params
+            yield deleteJournalEntry(journalId);
+            return res.status(200).json({ message: 'Journal entry deleted' });
+        }
+        next(); // Proceed to the next middleware/route if no journal action needed
     }
     catch (error) {
         console.error('Auth middleware error:', error);
