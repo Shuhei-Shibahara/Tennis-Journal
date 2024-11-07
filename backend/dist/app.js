@@ -16,7 +16,9 @@ dotenv_1.default.config(); // Load environment variables from .env file
 const app = (0, express_1.default)();
 // CORS configuration
 const corsOptions = {
-    origin: 'http://localhost:3000', // Change this to your frontend's URL if different
+    origin: process.env.NODE_ENV === 'production'
+        ? 'https://your-netlify-url.netlify.app' // Replace with your actual Netlify URL
+        : 'http://localhost:3000', // Localhost for development
     credentials: true, // Allow credentials (e.g., cookies)
 };
 // Middleware
