@@ -29,7 +29,11 @@ const JournalEntries: React.FC = () => {
       if (!userId) return;
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(`http://localhost:5000/api/journals/user/${userId}`, {
+        const apiUrl = process.env.REACT_APP_API_URL; // Get the API URL from environment variables
+        if (!apiUrl) {
+          throw new Error('API URL is not defined');
+        }
+        const response = await axios.get(`${apiUrl}/api/journals/user/${userId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -60,8 +64,13 @@ const JournalEntries: React.FC = () => {
 
       console.log('Updated entry:', updatedEntry);
 
+      const apiUrl = process.env.REACT_APP_API_URL; // Get the API URL from environment variables
+      if (!apiUrl) {
+        throw new Error('API URL is not defined');
+      }
+
       const response = await axios.put(
-        `http://localhost:5000/api/journals/${entryId}`,
+        `${apiUrl}/api/journals/${entryId}`,
         updatedEntry,
         {
           headers: {
@@ -88,7 +97,12 @@ const JournalEntries: React.FC = () => {
     console.log('Deleting Entry ID:', entryId); // Log the entryId when deleting
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.delete(`http://localhost:5000/api/journals/${entryId}`, {
+      const apiUrl = process.env.REACT_APP_API_URL; // Get the API URL from environment variables
+      if (!apiUrl) {
+        throw new Error('API URL is not defined');
+      }
+
+      const response = await axios.delete(`${apiUrl}/api/journals/${entryId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

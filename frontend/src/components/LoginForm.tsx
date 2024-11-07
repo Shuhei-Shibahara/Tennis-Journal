@@ -19,9 +19,13 @@ const LoginForm: React.FC = () => {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', data, {
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/auth/login`,
+        data,
+        {
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
 
       const { user, token } = response.data;
 
