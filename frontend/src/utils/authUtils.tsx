@@ -22,9 +22,10 @@ export const fetchUserData = async (token: string, dispatch: AppDispatch) => {
 
   // Log the token being sent
   console.log('Sending token:', token);
+  const apiUrl = process.env.REACT_APP_API_URL
 
   try {
-    const response = await axios.get(`http://localhost:5000/api/users/${userId}`, {
+    const response = await axios.get(`${apiUrl}/api/users/${userId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     console.log('User data fetched:', response.data);

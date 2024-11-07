@@ -35,6 +35,8 @@ const JournalEntryForm: React.FC = () => {
   const [reviews, setReviews] = React.useState<Array<google.maps.places.PlaceReview>>([]); // State for reviews
 
   const onSubmit: SubmitHandler<IJournalEntry> = async (data) => {
+    const apiUrl = process.env.REACT_APP_API_URL
+
     try {
       const userId = user?.userId;
 
@@ -43,7 +45,7 @@ const JournalEntryForm: React.FC = () => {
         return;
       }
 
-      await axios.post('http://localhost:5000/api/journals', { ...data, userId }, {
+      await axios.post(`${apiUrl}/api/journals`, { ...data, userId }, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },

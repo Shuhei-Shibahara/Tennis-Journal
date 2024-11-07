@@ -18,13 +18,15 @@ const Register: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState(''); // State for error message
 
   const onSubmit = async (data: RegisterFormData) => {
+    const apiUrl = process.env.REACT_APP_API_URL
+
     try {
-      const registerResponse = await axios.post('http://localhost:5000/api/auth/register', data, {
+      const registerResponse = await axios.post(`${apiUrl}/api/auth/register`, data, {
         headers: { 'Content-Type': 'application/json' },
       });
       console.log('User registered:', registerResponse.data);
 
-      const loginResponse = await axios.post('http://localhost:5000/api/auth/login', {
+      const loginResponse = await axios.post(`${apiUrl}/api/auth/login`, {
         email: data.email,
         password: data.password,
       }, {

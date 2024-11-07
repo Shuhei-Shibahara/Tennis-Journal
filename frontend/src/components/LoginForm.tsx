@@ -18,9 +18,11 @@ const LoginForm: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState(''); // State for error message
 
   const onSubmit = async (data: LoginFormData) => {
+    const apiUrl = process.env.REACT_APP_API_URL
+  
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/auth/login`,
+        `${apiUrl}/api/auth/login`,
         data,
         {
           headers: { 'Content-Type': 'application/json' },
