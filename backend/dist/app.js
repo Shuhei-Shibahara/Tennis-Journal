@@ -17,7 +17,7 @@ const app = (0, express_1.default)();
 // CORS configuration
 const corsOptions = {
     origin: process.env.NODE_ENV === 'production'
-        ? 'https://your-netlify-url.netlify.app' // Replace with your actual Netlify URL
+        ? 'https://ace-diary.netlify.app' // Replace with your actual Netlify URL
         : 'http://localhost:3000', // Localhost for development
     credentials: true, // Allow credentials (e.g., cookies)
 };
