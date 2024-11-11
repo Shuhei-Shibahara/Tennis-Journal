@@ -15,7 +15,7 @@ const app = express();
 // CORS configuration
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
-    ? 'https://tennis-journal-frontend.onrender.com'  // Replace with your actual Netlify URL
+    ? 'https://tennis-journal.onrender.com'  
     : 'http://localhost:3000', // Localhost for development
   credentials: true, // Allow credentials (e.g., cookies)
 };
