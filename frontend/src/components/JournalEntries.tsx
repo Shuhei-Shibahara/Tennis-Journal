@@ -22,6 +22,7 @@ const JournalEntries: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<JournalEntry>>({});
+  const [sortOption, setSortOption] = useState<string>('date'); // State for sorting option
   const userId = useSelector((state: RootState) => state.session.user?.userId);
 
   useEffect(() => {
@@ -29,7 +30,7 @@ const JournalEntries: React.FC = () => {
       if (!userId) return;
       try {
         const token = localStorage.getItem('token');
-        const apiUrl = process.env.REACT_APP_API_URL; // Get the API URL from environment variables
+        const apiUrl = process.env.REACT_APP_API_URL;
         if (!apiUrl) {
           throw new Error('API URL is not defined');
         }
@@ -38,33 +39,36 @@ const JournalEntries: React.FC = () => {
             Authorization: `Bearer ${token}`,
           },
         });
-        console.log('Fetched Entries:', response.data); // Log fetched entries
         setEntries(response.data);
       } catch (error: any) {
         console.error('Error fetching journal entries:', error);
         setError('Failed to fetch journal entries.');
       }
     };
-    if (userId) {
-      fetchEntries();
-    }
+    fetchEntries();
   }, [userId]);
 
+  // Sorting logic
+  const sortedEntries = [...entries].sort((a, b) => {
+    if (sortOption === 'location') {
+      return a.location.localeCompare(b.location);
+    } else if (sortOption === 'date') {
+      return new Date(a.date).getTime() - new Date(b.date).getTime();
+    }
+    return 0;
+  });
+
   const handleEdit = (entry: JournalEntry) => {
-    console.log('Editing Entry ID:', entry.entryId); // Log the entryId being edited
     setEditingEntryId(entry.entryId);
     setEditForm({ ...entry });
   };
 
   const handleSave = async (entryId: string) => {
-    console.log('Saving Entry ID:', entryId); // Log the entryId when saving
     try {
       const token = localStorage.getItem('token');
       const updatedEntry = { ...entries.find(entry => entry.entryId === entryId), ...editForm };
 
-      console.log('Updated entry:', updatedEntry);
-
-      const apiUrl = process.env.REACT_APP_API_URL; // Get the API URL from environment variables
+      const apiUrl = process.env.REACT_APP_API_URL;
       if (!apiUrl) {
         throw new Error('API URL is not defined');
       }
@@ -94,10 +98,9 @@ const JournalEntries: React.FC = () => {
   };
 
   const handleDelete = async (entryId: string) => {
-    console.log('Deleting Entry ID:', entryId); // Log the entryId when deleting
     try {
       const token = localStorage.getItem('token');
-      const apiUrl = process.env.REACT_APP_API_URL; // Get the API URL from environment variables
+      const apiUrl = process.env.REACT_APP_API_URL;
       if (!apiUrl) {
         throw new Error('API URL is not defined');
       }
@@ -122,8 +125,23 @@ const JournalEntries: React.FC = () => {
       <h2 className="text-3xl font-bold mb-6 text-center">Your Journal Entries</h2>
       {error && <p className="text-red-500 text-center">{error}</p>}
       {entries.length === 0 && !error && <p className="text-center">No journal entries found.</p>}
+
+      {/* Sorting options */}
+      <div className="mb-6 text-center">
+        <label htmlFor="sort" className="mr-2 font-semibold">Sort by:</label>
+        <select
+          id="sort"
+          value={sortOption}
+          onChange={(e) => setSortOption(e.target.value)}
+          className="border border-gray-300 rounded p-2"
+        >
+          <option value="date">Date</option>
+          <option value="location">Location</option>
+        </select>
+      </div>
+
       <ul className="space-y-6 max-w-4xl mx-auto">
-        {entries.map((entry) => (
+        {sortedEntries.map((entry) => (
           <li key={entry.entryId} className="p-6 bg-white border-2 border-gray-300 rounded-lg shadow-lg relative flex justify-between items-center">
             <div className="flex-grow">
               {editingEntryId === entry.entryId ? (
