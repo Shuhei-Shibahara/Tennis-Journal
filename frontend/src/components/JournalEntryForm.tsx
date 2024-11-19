@@ -11,8 +11,8 @@ interface IJournalEntry {
   tournamentName: string;
   location: string;
   courtSurface: string;
-  strengths: string;
-  weaknesses: string;
+  strengths: string[];
+  weaknesses: string[];
   lessonsLearned: string;
 }
 
@@ -22,20 +22,19 @@ const containerStyle = {
 };
 
 const mapCenter = {
-  lat: 34.0522, // Default latitude (e.g., Los Angeles)
-  lng: -118.2437, // Default longitude (e.g., Los Angeles)
+  lat: 34.0522,
+  lng: -118.2437,
 };
 
 const JournalEntryForm: React.FC = () => {
   const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm<IJournalEntry>();
   const user = useSelector((state: RootState) => state.session.user);
-  const [location, setLocation] = React.useState(mapCenter); // Map location state
-  const [searchBox, setSearchBox] = React.useState<google.maps.places.SearchBox | null>(null); // State for search box
-  const [placeId, setPlaceId] = React.useState<string | null>(null); // State to store the place ID
-  const [reviews, setReviews] = React.useState<Array<google.maps.places.PlaceReview>>([]); // State for reviews
+  const [location, setLocation] = React.useState(mapCenter);
+  const [reviews, setReviews] = React.useState<string[]>([]); // State to store reviews
+  const [searchBox, setSearchBox] = React.useState<google.maps.places.SearchBox | null>(null);
 
   const onSubmit: SubmitHandler<IJournalEntry> = async (data) => {
-    const apiUrl = process.env.REACT_APP_API_URL
+    const apiUrl = process.env.REACT_APP_API_URL;
 
     try {
       const userId = user?.userId;
@@ -59,120 +58,118 @@ const JournalEntryForm: React.FC = () => {
     }
   };
 
-  // Function to handle place selection from search box
   const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
     if (place.geometry) {
-      const lat = place.geometry.location?.lat() ?? 34.0522; // Default latitude
-      const lng = place.geometry.location?.lng() ?? -118.2437; // Default longitude
-      setLocation({ lat, lng }); // Set map location
-      setValue('location', place.formatted_address || ''); // Set the value of the location field
-      setPlaceId(place.place_id || null); // Save the place ID for fetching reviews
+      const lat = place.geometry.location?.lat() ?? mapCenter.lat;
+      const lng = place.geometry.location?.lng() ?? mapCenter.lng;
+
+      setLocation({ lat, lng });
+      setValue('location', place.formatted_address || '');
+
+      // Extract reviews if available
+      const placeReviews = place.reviews?.map((review) => review.text) || [];
+      setReviews(placeReviews);
     }
   };
-
-  // useEffect to fetch reviews once a place is selected
-  React.useEffect(() => {
-    if (placeId) {
-      const service = new google.maps.places.PlacesService(document.createElement('div'));
-      service.getDetails(
-        { placeId },
-        (placeDetails) => {
-          if (placeDetails && placeDetails.reviews) {
-            setReviews(placeDetails.reviews); // Set the reviews in state
-          } else {
-            setReviews([]); // Clear reviews if none found
-          }
-        }
-      );
-    }
-  }, [placeId]);
 
   return (
     <LoadScript
       googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY || ''}
       libraries={["places"]}
     >
-      <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-        <h2 className="text-xl font-bold mb-4 text-center">Journal Entry</h2>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <label className="block mb-1" htmlFor="date">Date</label>
+      <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
+        <h2 className="text-2xl font-bold mb-4 text-center">Journal Entry</h2>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <div className="space-y-2">
+            <label htmlFor="date" className="block font-medium">Date</label>
             <input
               type="date"
               {...register('date', { required: true })}
-              className={`w-full p-2 border ${errors.date ? 'border-red-500' : 'border-gray-300'} rounded`}
+              className={`w-full p-3 border ${errors.date ? 'border-red-500' : 'border-gray-300'} rounded`}
             />
-            {errors.date && <span className="text-red-500 text-sm">This field is required</span>}
+            {errors.date && <p className="text-red-500 text-sm">Date is required.</p>}
           </div>
 
-          <div>
-            <label className="block mb-1" htmlFor="opponent">Opponent</label>
+          <div className="space-y-2">
+            <label htmlFor="opponent" className="block font-medium">Opponent</label>
             <input
               type="text"
               {...register('opponent', { required: true })}
-              placeholder="Opponent"
-              className={`w-full p-2 border ${errors.opponent ? 'border-red-500' : 'border-gray-300'} rounded`}
+              placeholder="Opponent Name"
+              className={`w-full p-3 border ${errors.opponent ? 'border-red-500' : 'border-gray-300'} rounded`}
             />
-            {errors.opponent && <span className="text-red-500 text-sm">This field is required</span>}
+            {errors.opponent && <p className="text-red-500 text-sm">Opponent is required.</p>}
           </div>
 
-          <div>
-            <label className="block mb-1" htmlFor="tournamentName">Tournament Name</label>
+          <div className="space-y-2">
+            <label htmlFor="tournamentName" className="block font-medium">Tournament Name</label>
             <input
               type="text"
               {...register('tournamentName', { required: true })}
               placeholder="Tournament Name"
-              className={`w-full p-2 border ${errors.tournamentName ? 'border-red-500' : 'border-gray-300'} rounded`}
+              className={`w-full p-3 border ${errors.tournamentName ? 'border-red-500' : 'border-gray-300'} rounded`}
             />
-            {errors.tournamentName && <span className="text-red-500 text-sm">This field is required</span>}
+            {errors.tournamentName && <p className="text-red-500 text-sm">Tournament Name is required.</p>}
           </div>
 
-          <div>
-            <label className="block mb-1" htmlFor="courtSurface">Court Surface</label>
-            <input
-              type="text"
-              {...register('courtSurface', { required: true })}
-              placeholder="Court Surface"
-              className={`w-full p-2 border ${errors.courtSurface ? 'border-red-500' : 'border-gray-300'} rounded`}
-            />
-            {errors.courtSurface && <span className="text-red-500 text-sm">This field is required</span>}
+          <div className="space-y-2">
+            <label htmlFor="courtSurface" className="block font-medium">Court Surface</label>
+            {['Hard', 'Clay', 'Grass'].map((surface) => (
+              <label key={surface} className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  value={surface}
+                  {...register('courtSurface', { required: true })}
+                  className="form-radio"
+                />
+                <span>{surface}</span>
+              </label>
+            ))}
+            {errors.courtSurface && <p className="text-red-500 text-sm">Court Surface is required.</p>}
           </div>
 
-          <div>
-            <label className="block mb-1" htmlFor="strengths">Strengths</label>
-            <input
-              type="text"
-              {...register('strengths', { required: true })}
-              placeholder="Strengths"
-              className={`w-full p-2 border ${errors.strengths ? 'border-red-500' : 'border-gray-300'} rounded`}
-            />
-            {errors.strengths && <span className="text-red-500 text-sm">This field is required</span>}
+          <div className="space-y-2">
+            <label htmlFor="strengths" className="block font-medium">Strengths</label>
+            {['Forehand', 'Backhand', 'Serve', 'Volley', 'Return'].map((strength) => (
+              <label key={strength} className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  value={strength}
+                  {...register('strengths')}
+                  className="form-checkbox"
+                />
+                <span>{strength}</span>
+              </label>
+            ))}
           </div>
 
-          <div>
-            <label className="block mb-1" htmlFor="weaknesses">Weaknesses</label>
-            <input
-              type="text"
-              {...register('weaknesses', { required: true })}
-              placeholder="Weaknesses"
-              className={`w-full p-2 border ${errors.weaknesses ? 'border-red-500' : 'border-gray-300'} rounded`}
-            />
-            {errors.weaknesses && <span className="text-red-500 text-sm">This field is required</span>}
+          <div className="space-y-2">
+            <label htmlFor="weaknesses" className="block font-medium">Weaknesses</label>
+            {['Forehand', 'Backhand', 'Serve', 'Volley', 'Return'].map((weakness) => (
+              <label key={weakness} className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  value={weakness}
+                  {...register('weaknesses')}
+                  className="form-checkbox"
+                />
+                <span>{weakness}</span>
+              </label>
+            ))}
           </div>
 
-          <div>
-            <label className="block mb-1" htmlFor="lessonsLearned">Lessons Learned</label>
-            <input
-              type="text"
+          <div className="space-y-2">
+            <label htmlFor="lessonsLearned" className="block font-medium">Lessons Learned</label>
+            <textarea
               {...register('lessonsLearned', { required: true })}
-              placeholder="Lessons Learned"
-              className={`w-full p-2 border ${errors.lessonsLearned ? 'border-red-500' : 'border-gray-300'} rounded`}
+              placeholder="Share your experience"
+              className={`w-full p-3 border ${errors.lessonsLearned ? 'border-red-500' : 'border-gray-300'} rounded`}
             />
-            {errors.lessonsLearned && <span className="text-red-500 text-sm">This field is required</span>}
+            {errors.lessonsLearned && <p className="text-red-500 text-sm">Lessons Learned is required.</p>}
           </div>
 
-          <div>
-            <label className="block mb-1" htmlFor="location">Location</label>
+          <div className="space-y-2">
+            <label htmlFor="location" className="block font-medium">Location</label>
             <StandaloneSearchBox
               onLoad={(ref) => setSearchBox(ref)}
               onPlacesChanged={() => {
@@ -185,36 +182,35 @@ const JournalEntryForm: React.FC = () => {
               <input
                 type="text"
                 {...register('location', { required: true })}
-                placeholder="Location"
-                className={`w-full p-2 border ${errors.location ? 'border-red-500' : 'border-gray-300'} rounded`}
+                placeholder="Enter location"
+                className={`w-full p-3 border ${errors.location ? 'border-red-500' : 'border-gray-300'} rounded`}
               />
             </StandaloneSearchBox>
-            {errors.location && <span className="text-red-500 text-sm">This field is required</span>}
+            {errors.location && <p className="text-red-500 text-sm">Location is required.</p>}
           </div>
 
-          {/* Google Maps Integration */}
           <GoogleMap
             mapContainerStyle={containerStyle}
             center={location}
-            zoom={10}
+            zoom={12}
           >
             <Marker position={location} />
           </GoogleMap>
 
-          {/* Display Google Reviews */}
           {reviews.length > 0 && (
-            <div className="reviews-section mt-4">
-              <h3 className="font-bold mb-2">Google Reviews</h3>
-              {reviews.map((review, index) => (
-                <div key={index} className="review-item mb-4 p-2 border-b">
-                  <p><strong>{review.author_name}</strong>: {review.text}</p>
-                  <p>Rating: {review.rating} / 5</p>
-                </div>
-              ))}
+            <div className="mt-4">
+              <h3 className="font-bold text-lg">Reviews</h3>
+              <ul className="list-disc ml-6">
+                {reviews.map((review, index) => (
+                  <li key={index} className="text-gray-700">{review}</li>
+                ))}
+              </ul>
             </div>
           )}
 
-          <button type="submit" className="w-full p-2 bg-blue-500 text-white rounded">Submit</button>
+          <button type="submit" className="w-full py-3 bg-blue-500 text-white rounded hover:bg-blue-600">
+            Submit
+          </button>
         </form>
       </div>
     </LoadScript>
