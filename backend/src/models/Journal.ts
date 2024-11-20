@@ -17,6 +17,9 @@ export interface IJournal {
   strengths: string;
   weaknesses: string;
   lessonsLearned: string;
+  result: 'Win' | 'Lose'; // Only 'Win' or 'Lose'
+  score: string; // Match score in a readable format
+  stats: { [key: string]: string | number }; // Object to hold web-scraped stats
 }
 
 // Create a new journal entry
@@ -58,7 +61,18 @@ export const modelUpdateJournalEntryById = async (userId: string, entryId: strin
   const command = new UpdateCommand({
     TableName: 'Journal-Entries',
     Key: { userId, entryId },
-    UpdateExpression: 'set #date = :date, #opponent = :opponent, #tournamentName = :tournamentName, #location = :location, #courtSurface = :courtSurface, #strengths = :strengths, #weaknesses = :weaknesses, #lessonsLearned = :lessonsLearned',
+    UpdateExpression: `set 
+      #date = :date,
+      #opponent = :opponent,
+      #tournamentName = :tournamentName,
+      #location = :location,
+      #courtSurface = :courtSurface,
+      #strengths = :strengths,
+      #weaknesses = :weaknesses,
+      #lessonsLearned = :lessonsLearned,
+      #result = :result,
+      #score = :score,
+      #stats = :stats`,
     ExpressionAttributeNames: {
       '#date': 'date',
       '#opponent': 'opponent',
@@ -68,6 +82,9 @@ export const modelUpdateJournalEntryById = async (userId: string, entryId: strin
       '#strengths': 'strengths',
       '#weaknesses': 'weaknesses',
       '#lessonsLearned': 'lessonsLearned',
+      '#result': 'result',
+      '#score': 'score',
+      '#stats': 'stats',
     },
     ExpressionAttributeValues: {
       ':date': updates.date,
@@ -78,6 +95,9 @@ export const modelUpdateJournalEntryById = async (userId: string, entryId: strin
       ':strengths': updates.strengths,
       ':weaknesses': updates.weaknesses,
       ':lessonsLearned': updates.lessonsLearned,
+      ':result': updates.result,
+      ':score': updates.score,
+      ':stats': updates.stats,
     },
     ReturnValues: 'ALL_NEW',
   });

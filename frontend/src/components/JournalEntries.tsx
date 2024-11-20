@@ -7,6 +7,7 @@ import { faTrash, faWrench, faSave } from '@fortawesome/free-solid-svg-icons';
 
 interface JournalEntry {
   entryId: string;
+  userId: string;
   date: string;
   opponent: string;
   tournamentName: string;
@@ -15,6 +16,9 @@ interface JournalEntry {
   strengths: string;
   weaknesses: string;
   lessonsLearned: string;
+  stats: string;
+  result: string;
+  score: string;
 }
 
 const JournalEntries: React.FC = () => {
@@ -22,7 +26,7 @@ const JournalEntries: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<JournalEntry>>({});
-  const [sortOption, setSortOption] = useState<string>('date'); // State for sorting option
+  const [sortBy, setSortBy] = useState<'date' | 'location'>('date');
   const userId = useSelector((state: RootState) => state.session.user?.userId);
 
   useEffect(() => {
@@ -47,16 +51,6 @@ const JournalEntries: React.FC = () => {
     };
     fetchEntries();
   }, [userId]);
-
-  // Sorting logic
-  const sortedEntries = [...entries].sort((a, b) => {
-    if (sortOption === 'location') {
-      return a.location.localeCompare(b.location);
-    } else if (sortOption === 'date') {
-      return new Date(a.date).getTime() - new Date(b.date).getTime();
-    }
-    return 0;
-  });
 
   const handleEdit = (entry: JournalEntry) => {
     setEditingEntryId(entry.entryId);
@@ -120,19 +114,40 @@ const JournalEntries: React.FC = () => {
     }
   };
 
+  const sortedEntries = [...entries].sort((a, b) => {
+    if (sortBy === 'date') {
+      return new Date(a.date).getTime() - new Date(b.date).getTime();
+    } else if (sortBy === 'location') {
+      return a.location.localeCompare(b.location);
+    }
+    return 0;
+  });
+
+  const editableFields = [
+    { key: 'tournamentName', label: 'Tournament Name' },
+    { key: 'opponent', label: 'Opponent' },
+    { key: 'date', label: 'Date' },
+    { key: 'result', label: 'Result' },
+    { key: 'score', label: 'Score' },
+    { key: 'location', label: 'Location' },
+    { key: 'courtSurface', label: 'Court Surface' },
+    { key: 'strengths', label: 'Strengths' },
+    { key: 'weaknesses', label: 'Weaknesses' },
+    { key: 'lessonsLearned', label: 'Lessons Learned' },
+    { key: 'stats', label: 'Stats' },
+  ];
+
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4">
       <h2 className="text-3xl font-bold mb-6 text-center">Your Journal Entries</h2>
       {error && <p className="text-red-500 text-center">{error}</p>}
       {entries.length === 0 && !error && <p className="text-center">No journal entries found.</p>}
 
-      {/* Sorting options */}
-      <div className="mb-6 text-center">
-        <label htmlFor="sort" className="mr-2 font-semibold">Sort by:</label>
+      <div className="mb-6 flex justify-end">
+        <label className="mr-2 font-semibold text-gray-600">Sort by:</label>
         <select
-          id="sort"
-          value={sortOption}
-          onChange={(e) => setSortOption(e.target.value)}
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value as 'date' | 'location')}
           className="border border-gray-300 rounded p-2"
         >
           <option value="date">Date</option>
@@ -146,15 +161,15 @@ const JournalEntries: React.FC = () => {
             <div className="flex-grow">
               {editingEntryId === entry.entryId ? (
                 <div className="space-y-4">
-                  {Object.keys(editForm).map((key) => (
-                    <div key={key} className="mb-2">
+                  {editableFields.map((field) => (
+                    <div key={field.key} className="mb-2">
                       <label className="block font-semibold text-gray-600 mb-1">
-                        {key.charAt(0).toUpperCase() + key.slice(1)}
+                        {field.label}
                       </label>
                       <input
                         type="text"
-                        value={editForm[key as keyof Partial<JournalEntry>] || ''}
-                        onChange={(e) => handleChange(key, e.target.value)}
+                        value={editForm[field.key as keyof JournalEntry] || ''}
+                        onChange={(e) => handleChange(field.key, e.target.value)}
                         className="border border-gray-300 rounded p-2 w-full"
                       />
                     </div>
@@ -168,11 +183,14 @@ const JournalEntries: React.FC = () => {
                   <h3 className="text-lg font-semibold">{entry.tournamentName}</h3>
                   <p className="text-gray-600">Opponent: {entry.opponent}</p>
                   <p className="text-gray-600">Date: {entry.date}</p>
+                  <p className="text-gray-600">Result: {entry.result}</p>
+                  <p className="text-gray-600">Score: {entry.score}</p>
                   <p className="text-gray-600">Location: {entry.location}</p>
                   <p className="text-gray-600">Court Surface: {entry.courtSurface}</p>
                   <p className="text-gray-600">Strengths: {entry.strengths}</p>
                   <p className="text-gray-600">Weaknesses: {entry.weaknesses}</p>
                   <p className="text-gray-600">Lessons Learned: {entry.lessonsLearned}</p>
+                  <p className="text-gray-600">Stats: {entry.stats}</p>
                 </div>
               )}
             </div>
@@ -198,3 +216,4 @@ const JournalEntries: React.FC = () => {
 };
 
 export default JournalEntries;
+

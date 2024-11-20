@@ -14,7 +14,11 @@ interface IJournalEntry {
   strengths: string[];
   weaknesses: string[];
   lessonsLearned: string;
+  result?: 'Win' | 'Lose'; // Result toggle
+  score?: string; // Score input
+  stats?: string; // Stats input box (optional)
 }
+
 
 const containerStyle = {
   width: '100%',
@@ -30,7 +34,7 @@ const JournalEntryForm: React.FC = () => {
   const { register, handleSubmit, setValue, formState: { errors }, reset } = useForm<IJournalEntry>();
   const user = useSelector((state: RootState) => state.session.user);
   const [location, setLocation] = React.useState(mapCenter);
-  const [reviews, setReviews] = React.useState<string[]>([]); // State to store reviews
+  const [reviews, setReviews] = React.useState<string[]>([]);
   const [searchBox, setSearchBox] = React.useState<google.maps.places.SearchBox | null>(null);
 
   const onSubmit: SubmitHandler<IJournalEntry> = async (data) => {
@@ -71,7 +75,6 @@ const JournalEntryForm: React.FC = () => {
       setReviews(placeReviews);
     }
   };
-
   return (
     <LoadScript
       googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_API_KEY || ''}
@@ -88,6 +91,42 @@ const JournalEntryForm: React.FC = () => {
               className={`w-full p-3 border ${errors.date ? 'border-red-500' : 'border-gray-300'} rounded`}
             />
             {errors.date && <p className="text-red-500 text-sm">Date is required.</p>}
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="result" className="block font-medium">Result</label>
+            {['Win', 'Lose'].map((result) => (
+              <label key={result} className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  value={result}
+                  {...register('result')}
+                  className="form-radio"
+                />
+                <span>{result}</span>
+              </label>
+            ))}
+          </div>
+
+          {/* New Score Input */}
+          <div className="space-y-2">
+            <label htmlFor="score" className="block font-medium">Score</label>
+            <input
+              type="text"
+              {...register('score')}
+              placeholder="Enter match score (e.g., 6-4, 7-5)"
+              className="w-full p-3 border border-gray-300 rounded"
+            />
+          </div>
+
+          {/* New Stats Input */}
+          <div className="space-y-2">
+            <label htmlFor="stats" className="block font-medium">Stats</label>
+            <textarea
+              {...register('stats')}
+              placeholder="Optional: Enter match statistics (e.g., Aces: 10, Double Faults: 2)"
+              className="w-full p-3 border border-gray-300 rounded"
+            />
           </div>
 
           <div className="space-y-2">
