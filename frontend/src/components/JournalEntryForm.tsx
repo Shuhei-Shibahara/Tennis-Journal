@@ -36,6 +36,8 @@ const JournalEntryForm: React.FC = () => {
   const [location, setLocation] = React.useState(mapCenter);
   const [reviews, setReviews] = React.useState<string[]>([]);
   const [searchBox, setSearchBox] = React.useState<google.maps.places.SearchBox | null>(null);
+  const [statsUrl, setStatsUrl] = React.useState<string>(''); // URL state
+
 
   const onSubmit: SubmitHandler<IJournalEntry> = async (data) => {
     const apiUrl = process.env.REACT_APP_API_URL;
@@ -61,6 +63,37 @@ const JournalEntryForm: React.FC = () => {
       alert('Failed to submit journal entry. Please try again.');
     }
   };
+
+
+  const handleStatsFetch = async (url: string): Promise<void> => {
+    if (!url) {
+      console.error("URL is required to fetch stats.");
+      return;
+    }
+
+    try {
+      // Request to the scraper backend route
+      const response = await axios.get('http://localhost:5000/api/scrape', {
+        params: { url }, // Send the URL as a query parameter
+      });
+
+      const { stats } = response.data;
+
+      // Process the stats data as needed
+      console.log("Fetched stats:", stats);
+
+      // Update your state or UI with the fetched stats
+      // Example: setStats(stats); if using React state
+    } catch (error) {
+      // Type guard to check if error is an AxiosError
+      if (axios.isAxiosError(error)) {
+        console.error("Axios error message:", error.message);
+      } else {
+        console.error("Unknown error occurred:", error);
+      }
+    }
+  };
+
 
   const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
     if (place.geometry) {
@@ -120,14 +153,14 @@ const JournalEntryForm: React.FC = () => {
           </div>
 
           {/* New Stats Input */}
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <label htmlFor="stats" className="block font-medium">Stats</label>
             <textarea
               {...register('stats')}
               placeholder="Optional: Enter match statistics (e.g., Aces: 10, Double Faults: 2)"
               className="w-full p-3 border border-gray-300 rounded"
             />
-          </div>
+          </div> */}
 
           <div className="space-y-2">
             <label htmlFor="opponent" className="block font-medium">Opponent</label>
@@ -206,6 +239,35 @@ const JournalEntryForm: React.FC = () => {
             />
             {errors.lessonsLearned && <p className="text-red-500 text-sm">Lessons Learned is required.</p>}
           </div>
+          <div className="space-y-2">
+            <label htmlFor="statsUrl" className="block font-medium">Match Stats URL</label>
+            <input
+              type="text"
+              value={statsUrl}
+              onChange={(e) => setStatsUrl(e.target.value)}
+              placeholder="Enter URL for match stats"
+              className="w-full p-3 border border-gray-300 rounded"
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => handleStatsFetch(statsUrl)} // Pass the current statsUrl state
+            className="w-full py-3 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Fetch Stats
+          </button>
+
+          {/* Stats input */}
+          <div className="space-y-2">
+            <label htmlFor="stats" className="block font-medium">Stats</label>
+            <textarea
+              {...register('stats')}
+              placeholder="Optional: Enter match statistics (e.g., Aces: 10, Double Faults: 2)"
+              className="w-full p-3 border border-gray-300 rounded"
+            />
+          </div>
+
 
           <div className="space-y-2">
             <label htmlFor="location" className="block font-medium">Location</label>

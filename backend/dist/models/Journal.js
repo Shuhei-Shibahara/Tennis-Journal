@@ -52,7 +52,18 @@ const modelUpdateJournalEntryById = (userId, entryId, updates) => __awaiter(void
     const command = new lib_dynamodb_1.UpdateCommand({
         TableName: 'Journal-Entries',
         Key: { userId, entryId },
-        UpdateExpression: 'set #date = :date, #opponent = :opponent, #tournamentName = :tournamentName, #location = :location, #courtSurface = :courtSurface, #strengths = :strengths, #weaknesses = :weaknesses, #lessonsLearned = :lessonsLearned',
+        UpdateExpression: `set 
+      #date = :date,
+      #opponent = :opponent,
+      #tournamentName = :tournamentName,
+      #location = :location,
+      #courtSurface = :courtSurface,
+      #strengths = :strengths,
+      #weaknesses = :weaknesses,
+      #lessonsLearned = :lessonsLearned,
+      #result = :result,
+      #score = :score,
+      #stats = :stats`,
         ExpressionAttributeNames: {
             '#date': 'date',
             '#opponent': 'opponent',
@@ -62,6 +73,9 @@ const modelUpdateJournalEntryById = (userId, entryId, updates) => __awaiter(void
             '#strengths': 'strengths',
             '#weaknesses': 'weaknesses',
             '#lessonsLearned': 'lessonsLearned',
+            '#result': 'result',
+            '#score': 'score',
+            '#stats': 'stats',
         },
         ExpressionAttributeValues: {
             ':date': updates.date,
@@ -72,6 +86,9 @@ const modelUpdateJournalEntryById = (userId, entryId, updates) => __awaiter(void
             ':strengths': updates.strengths,
             ':weaknesses': updates.weaknesses,
             ':lessonsLearned': updates.lessonsLearned,
+            ':result': updates.result,
+            ':score': updates.score,
+            ':stats': updates.stats,
         },
         ReturnValues: 'ALL_NEW',
     });
