@@ -1,4 +1,27 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -14,32 +37,40 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const axios_1 = __importDefault(require("axios"));
-const cheerio_1 = __importDefault(require("cheerio")); // For HTML parsing
+const cheerio = __importStar(require("cheerio")); // Ensure this matches your installed version
 const router = express_1.default.Router();
-// Scrape route
 router.get('/scrape', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { url } = req.query;
-    // Validate URL parameter
     if (!url || typeof url !== 'string') {
         return res.status(400).json({ error: 'URL is required and should be a string' });
     }
     try {
-        // Fetch the HTML content of the page
         const { data } = yield axios_1.default.get(url);
-        // Log the data to check if the HTML content is fetched correctly
         if (!data) {
             return res.status(500).json({ error: 'Failed to retrieve HTML content from the URL' });
         }
-        console.log('HTML content fetched successfully', data);
-        const $ = cheerio_1.default.load(data);
-        // Initialize the stats object
+        const $ = cheerio.load(data);
         const stats = {};
-        // Scrape player stats
+        let winner = '';
+        // Find the element with a winner class
+        const winnerClassElement = $('div[class*="mc-stats__stat-container--"]')
+            .filter((_, el) => $(el).hasClass('mc-stats__stat-container--a-winner') || $(el).hasClass('mc-stats__stat-container--b-winner'))
+            .attr('class');
+        if (winnerClassElement) {
+            // Determine if Player A or Player B is the winner
+            if (winnerClassElement.includes('--a-winner')) {
+                winner = 'Player A';
+            }
+            else if (winnerClassElement.includes('--b-winner')) {
+                winner = 'Player B';
+            }
+        }
+        else {
+            winner = 'No winner information found';
+        }
+        // Scrape stats
         $('div.mc-stats__stat-container').each((index, element) => {
-            const label = $(element)
-                .find('p.mc-stats__stat-label')
-                .text()
-                .trim();
+            const label = $(element).find('p.mc-stats__stat-label').text().trim();
             const playerAStat = $(element)
                 .find('.mc-stats__stat-player-container--player-a .mc-stats__stat-player-number-primary')
                 .text()
@@ -49,26 +80,22 @@ router.get('/scrape', (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 .text()
                 .trim();
             if (label) {
-                // Add to stats object, making sure to handle empty or missing stats
                 stats[label] = {
-                    playerA: playerAStat || 'N/A', // Default to 'N/A' if player A stat is missing
-                    playerB: playerBStat || 'N/A', // Default to 'N/A' if player B stat is missing
+                    playerA: playerAStat || 'N/A',
+                    playerB: playerBStat || 'N/A',
                 };
             }
         });
-        // Check if stats were found
         if (Object.keys(stats).length === 0) {
             return res.status(404).json({ error: 'No stats found for the provided URL' });
         }
-        // Return the scraped stats
-        res.json({ stats });
+        res.json({ stats, winner });
+        console.log(winner);
     }
     catch (error) {
-        // Assert the error type to Error and access the message property
         const err = error;
         console.error('Error scraping the URL:', err.message);
-        // Send a detailed error response
-        res.status(500).json({ error: 'Failed to scrape data, please check the URL or try again later.' });
+        res.status(500).json({ error: 'Failed to scrape data. Please check the URL or try again later.' });
     }
 }));
 exports.default = router;
