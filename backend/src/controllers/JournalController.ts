@@ -56,7 +56,7 @@ export const getJournalEntriesByUserId = async (req: Request, res: Response) => 
     }
 
     const journals = await modelGetJournalEntriesByUserId(user.userId);
-
+    console.log('hello from get journal', journals)
     res.status(200).json({ message: 'Journal entries fetched successfully', journals });
   } catch (error) {
     console.error('Error fetching journal entries:', error);

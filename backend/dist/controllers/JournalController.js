@@ -55,6 +55,7 @@ const getJournalEntriesByUserId = (req, res) => __awaiter(void 0, void 0, void 0
             return res.status(401).json({ message: 'Unauthorized' });
         }
         const journals = yield (0, Journal_1.modelGetJournalEntriesByUserId)(user.userId);
+        console.log('hello from get journal', journals);
         res.status(200).json({ message: 'Journal entries fetched successfully', journals });
     }
     catch (error) {

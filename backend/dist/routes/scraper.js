@@ -90,7 +90,6 @@ router.get('/scrape', (req, res) => __awaiter(void 0, void 0, void 0, function* 
             return res.status(404).json({ error: 'No stats found for the provided URL' });
         }
         res.json({ stats, winner });
-        console.log(winner);
     }
     catch (error) {
         const err = error;

@@ -31,7 +31,10 @@ const JournalEntries: React.FC = () => {
 
   useEffect(() => {
     const fetchEntries = async () => {
-      if (!userId) return;
+      if (!userId) {
+        setError('User ID is undefined.');
+        return;
+      }
       try {
         const token = localStorage.getItem('token');
         const apiUrl = process.env.REACT_APP_API_URL;
@@ -43,10 +46,16 @@ const JournalEntries: React.FC = () => {
             Authorization: `Bearer ${token}`,
           },
         });
-        setEntries(response.data);
+        console.log(response.data.journals)
+        if (Array.isArray(response.data.journals)) {
+          setEntries(response.data.journals);
+        } else {
+          throw new Error('Unexpected API response format.');
+        }
       } catch (error: any) {
         console.error('Error fetching journal entries:', error);
         setError('Failed to fetch journal entries.');
+        setEntries([]); // Ensure entries is always an array
       }
     };
     fetchEntries();
@@ -113,7 +122,7 @@ const JournalEntries: React.FC = () => {
       setError('Failed to delete entry.');
     }
   };
-
+  console.log(entries)
   const sortedEntries = [...entries].sort((a, b) => {
     if (sortBy === 'date') {
       return new Date(a.date).getTime() - new Date(b.date).getTime();
@@ -190,7 +199,9 @@ const JournalEntries: React.FC = () => {
                   <p className="text-gray-600">Strengths: {entry.strengths}</p>
                   <p className="text-gray-600">Weaknesses: {entry.weaknesses}</p>
                   <p className="text-gray-600">Lessons Learned: {entry.lessonsLearned}</p>
-                  <p className="text-gray-600">Stats: {entry.stats}</p>
+                  {/* <p className="text-gray-600">Stats: {entry.stats}</p> */}
+                  <p>Stats: {typeof entry.stats === 'object' ? JSON.stringify(entry.stats) : entry.stats}</p>
+
                 </div>
               )}
             </div>
