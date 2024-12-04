@@ -39,7 +39,7 @@ app.use('/api/users', authMiddleware_1.default, userRoutes_1.default);
 app.use('/api/journals', journalRoutes_1.default);
 app.use('/api', scraper_1.default);
 // Start the server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5050;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });

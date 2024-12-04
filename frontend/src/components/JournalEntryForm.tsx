@@ -73,7 +73,7 @@ const JournalEntryForm: React.FC = () => {
 
     try {
       // Request to the scraper backend route
-      const response = await axios.get('http://localhost:5000/api/scrape', {
+      const response = await axios.get('http://localhost:5050/api/scrape', {
         params: { url }, // Send the URL as a query parameter
       });
 
