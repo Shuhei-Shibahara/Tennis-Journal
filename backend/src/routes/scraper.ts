@@ -4,6 +4,12 @@ import * as cheerio from 'cheerio'; // Ensure this matches your installed versio
 
 const router = express.Router();
 
+interface Stat {
+  stat: string;
+  playerA: number;
+  playerB: number;
+}
+
 router.get('/scrape', async (req, res) => {
   const { url } = req.query;
 
@@ -20,16 +26,14 @@ router.get('/scrape', async (req, res) => {
 
     const $ = cheerio.load(data);
 
-    const stats: { [key: string]: { playerA: string | number; playerB: string | number } } = {};
+    const statsArray: Stat[] = [];
     let winner = '';
 
-    // Find the element with a winner class
     const winnerClassElement = $('div[class*="mc-stats__stat-container--"]')
       .filter((_, el) => $(el).hasClass('mc-stats__stat-container--a-winner') || $(el).hasClass('mc-stats__stat-container--b-winner'))
       .attr('class');
 
     if (winnerClassElement) {
-      // Determine if Player A or Player B is the winner
       if (winnerClassElement.includes('--a-winner')) {
         winner = 'Player A';
       } else if (winnerClassElement.includes('--b-winner')) {
@@ -39,38 +43,45 @@ router.get('/scrape', async (req, res) => {
       winner = 'No winner information found';
     }
 
-    // Scrape stats
     $('div.mc-stats__stat-container').each((index, element) => {
       const label = $(element).find('p.mc-stats__stat-label').text().trim();
-      const playerAStat = $(element)
+      const playerAStat = parseFloat($(element)
         .find('.mc-stats__stat-player-container--player-a .mc-stats__stat-player-number-primary')
         .text()
-        .trim();
-      const playerBStat = $(element)
+        .trim()
+        .replace('%', '')) || 0;
+      const playerBStat = parseFloat($(element)
         .find('.mc-stats__stat-player-container--player-b .mc-stats__stat-player-number-primary')
         .text()
-        .trim();
+        .trim()
+        .replace('%', '')) || 0;
 
       if (label) {
-        stats[label] = {
-          playerA: playerAStat || 'N/A',
-          playerB: playerBStat || 'N/A',
-        };
+        statsArray.push({
+          stat: label,
+          playerA: playerAStat,
+          playerB: playerBStat,
+        });
       }
     });
 
-    if (Object.keys(stats).length === 0) {
+    if (statsArray.length === 0) {
       return res.status(404).json({ error: 'No stats found for the provided URL' });
     }
-
-    res.json({ stats, winner });
+    console.log(statsArray.slice(0, 14), winner)
+    res.json({ stats: statsArray.slice(0, 14),
+              winner: winner
+    });
 
   } catch (error: unknown) {
-    const err = error as Error;
-    console.error('Error scraping the URL:', err.message);
-    res.status(500).json({ error: 'Failed to scrape data. Please check the URL or try again later.' });
+    if (error instanceof Error) {
+      console.error('Error scraping the URL:', error.message);
+      res.status(500).json({ error: 'Failed to scrape data. Please check the URL or try again later.' });
+    } else {
+      console.error('Unknown error occurred:', error);
+      res.status(500).json({ error: 'An unknown error occurred. Please try again later.' });
+    }
   }
 });
-
 
 export default router;

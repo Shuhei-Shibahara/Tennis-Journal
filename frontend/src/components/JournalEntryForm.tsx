@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import axios from 'axios';
+import * as d3 from 'd3';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { LoadScript, GoogleMap, Marker, StandaloneSearchBox } from '@react-google-maps/api';
@@ -37,7 +38,8 @@ const JournalEntryForm: React.FC = () => {
   const [reviews, setReviews] = React.useState<string[]>([]);
   const [searchBox, setSearchBox] = React.useState<google.maps.places.SearchBox | null>(null);
   const [statsUrl, setStatsUrl] = React.useState<string>(''); // URL state
-
+  const [stats, setStats] = React.useState<any[]>([]); // State to store stats
+  const [selectedStat, setSelectedStat] = React.useState<string>(''); // State to store the selected stat
 
   const onSubmit: SubmitHandler<IJournalEntry> = async (data) => {
     const apiUrl = process.env.REACT_APP_API_URL;
@@ -65,6 +67,7 @@ const JournalEntryForm: React.FC = () => {
   };
 
 
+  // Fetch stats from the backend or use static data
   const handleStatsFetch = async (url: string): Promise<void> => {
     if (!url) {
       console.error("URL is required to fetch stats.");
@@ -72,28 +75,84 @@ const JournalEntryForm: React.FC = () => {
     }
 
     try {
-      // Request to the scraper backend route
       const response = await axios.get('http://localhost:5050/api/scrape', {
         params: { url }, // Send the URL as a query parameter
       });
-
       const { stats } = response.data;
-
-      // Process the stats data as needed
-      console.log("Fetched stats:", stats);
-
-      // Update your state or UI with the fetched stats
-      // Example: setStats(stats); if using React state
+      setStats(stats);
     } catch (error) {
-      // Type guard to check if error is an AxiosError
-      if (axios.isAxiosError(error)) {
-        console.error("Axios error message:", error.message);
-      } else {
-        console.error("Unknown error occurred:", error);
-      }
+      console.error("Error fetching stats:", error);
     }
   };
 
+
+  // Handle dropdown change (when a new stat is selected)
+  const handleStatChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedStat(event.target.value);
+  };
+
+  // D3.js rendering when stats or selectedStat changes
+  useEffect(() => {
+    // Logging data to ensure it's correct
+    console.log('Selected Stat:', selectedStat);
+    console.log('Stats:', stats);
+
+    if (!selectedStat || !stats.length) return;
+
+    // Find the selected stat in the stats array
+    const selectedData = stats.find((stat) => stat.stat === selectedStat);
+
+    if (!selectedData) {
+      console.log('No data found for the selected stat.');
+      return; // Ensure valid data is available for the selected stat
+    }
+
+    console.log('Selected Data:', selectedData);
+
+    // Set up SVG dimensions and margins
+    const margin = { top: 20, right: 30, bottom: 40, left: 40 };
+    const width = 500 - margin.left - margin.right;
+    const height = 300 - margin.top - margin.bottom;
+
+    const svg = d3.select('#chart')
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', height + margin.top + margin.bottom)
+      .append('g')
+      .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    // Define scales for x and y axes
+    const x = d3.scaleBand<string>()
+      .domain(['playerA', 'playerB'])
+      .range([0, width])
+      .padding(0.1);
+
+    const y = d3.scaleLinear()
+      .domain([0, Math.max(selectedData.playerA, selectedData.playerB)])
+      .nice()
+      .range([height, 0]);
+
+    svg.selectAll('*').remove(); // Clear previous chart content
+
+    // Draw bars for player A and player B
+    svg.selectAll('.bar')
+      .data(['playerA', 'playerB'])
+      .enter().append('rect')
+      .attr('class', 'bar')
+      .attr('x', (d) => x(d) ?? 0)  // Default to 0 if x(d) is undefined
+      .attr('y', (d) => y(selectedData[d]) ?? 0)  // Default to 0 if y(selectedData[d]) is undefined
+      .attr('width', x.bandwidth())
+      .attr('height', (d) => height - (y(selectedData[d]) ?? 0)) // Fixed height calculation
+
+    // Add labels to the bars
+    svg.selectAll('.label')
+      .data(['playerA', 'playerB'])
+      .enter().append('text')
+      .attr('class', 'label')
+      .attr('x', (d) => (x(d) ?? 0) + x.bandwidth() / 2)  // Ensure x(d) is not undefined
+      .attr('y', (d) => (y(selectedData[d]) ?? 0) - 5)  // Ensure y(selectedData[d]) is not undefined
+      .attr('text-anchor', 'middle')
+      .text((d) => selectedData[d]);
+  }, [selectedStat, stats]);
 
   const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
     if (place.geometry) {
@@ -257,6 +316,23 @@ const JournalEntryForm: React.FC = () => {
           >
             Fetch Stats
           </button>
+
+          <div>
+            <h2>Stats Visualization</h2>
+
+            {/* Dropdown for selecting the stat */}
+            <select onChange={handleStatChange} value={selectedStat}>
+              <option value="">Select a Stat</option>
+              {stats.map((stat) => (
+                <option key={stat.stat} value={stat.stat}>
+                  {stat.stat}
+                </option>
+              ))}
+            </select>
+
+            {/* SVG container for the chart */}
+            <svg id="chart"></svg>
+          </div>
 
           {/* Stats input */}
           <div className="space-y-2">
