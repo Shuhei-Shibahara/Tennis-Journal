@@ -91,9 +91,8 @@ const JournalEntryForm: React.FC = () => {
     setSelectedStat(event.target.value);
   };
 
-  // D3.js rendering when stats or selectedStat changes
   useEffect(() => {
-    // Logging data to ensure it's correct
+    // Logging selectedStat and stats to ensure data is correct
     console.log('Selected Stat:', selectedStat);
     console.log('Stats:', stats);
 
@@ -114,45 +113,51 @@ const JournalEntryForm: React.FC = () => {
     const width = 500 - margin.left - margin.right;
     const height = 300 - margin.top - margin.bottom;
 
-    const svg = d3.select('#chart')
-      .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
-      .append('g')
+    // Select the SVG container and clear its contents before adding new chart elements
+    const svg = d3.select('#chart');
+    svg.selectAll('*').remove();  // Clear previous content
+
+    // Add a group element to hold the chart elements
+    const chartGroup = svg.append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
     // Define scales for x and y axes
     const x = d3.scaleBand<string>()
-      .domain(['playerA', 'playerB'])
+      .domain(['playerA', 'playerB']) // Use correct data keys
       .range([0, width])
       .padding(0.1);
 
     const y = d3.scaleLinear()
-      .domain([0, Math.max(selectedData.playerA, selectedData.playerB)])
+      .domain([0, Math.max(selectedData.playerA, selectedData.playerB)]) // Check if values are valid
       .nice()
       .range([height, 0]);
 
-    svg.selectAll('*').remove(); // Clear previous chart content
+    // Debug: Check the x and y scales
+    console.log('X scale domain:', x.domain());
+    console.log('Y scale domain:', y.domain());
 
     // Draw bars for player A and player B
-    svg.selectAll('.bar')
+    chartGroup.selectAll('.bar')
       .data(['playerA', 'playerB'])
       .enter().append('rect')
       .attr('class', 'bar')
-      .attr('x', (d) => x(d) ?? 0)  // Default to 0 if x(d) is undefined
-      .attr('y', (d) => y(selectedData[d]) ?? 0)  // Default to 0 if y(selectedData[d]) is undefined
+      .attr('x', (d) => x(d) ?? 0)  // Default to 0 if x returns undefined
+      .attr('y', (d) => y(selectedData[d]) ?? 0) // Default to 0 if y returns undefined
       .attr('width', x.bandwidth())
-      .attr('height', (d) => height - (y(selectedData[d]) ?? 0)) // Fixed height calculation
+      .attr('height', (d) => height - (y(selectedData[d]) ?? 0)); // Ensure height is valid
 
     // Add labels to the bars
-    svg.selectAll('.label')
+    chartGroup.selectAll('.label')
       .data(['playerA', 'playerB'])
       .enter().append('text')
       .attr('class', 'label')
-      .attr('x', (d) => (x(d) ?? 0) + x.bandwidth() / 2)  // Ensure x(d) is not undefined
-      .attr('y', (d) => (y(selectedData[d]) ?? 0) - 5)  // Ensure y(selectedData[d]) is not undefined
+      .attr('x', (d) => (x(d) ?? 0) + x.bandwidth() / 2) // Default to 0 if x returns undefined
+      .attr('y', (d) => (y(selectedData[d]) ?? 0) - 5) // Default to 0 if y returns undefined
       .attr('text-anchor', 'middle')
       .text((d) => selectedData[d]);
-  }, [selectedStat, stats]);
+
+  }, [selectedStat, stats]);  // Re-run the effect when selectedStat or stats changes
+
 
   const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
     if (place.geometry) {
