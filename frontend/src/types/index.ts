@@ -14,7 +14,7 @@ export interface JournalEntry {
   strengths: string[];
   weaknesses: string[];
   lessonsLearned: string;
-  stats?: string;
+  stats: string | MatchStatistic[];
   result?: 'Win' | 'Lose';
   score?: string;
 }
@@ -24,4 +24,10 @@ export interface LoginFormData {
   password: string;
 }
 
-export interface RegisterFormData extends LoginFormData {} 
+export interface RegisterFormData extends LoginFormData {}
+
+export interface MatchStatistic {
+  stat: string;
+  playerA: number;
+  playerB: number;
+} 

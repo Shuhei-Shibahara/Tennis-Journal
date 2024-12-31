@@ -1,55 +1,71 @@
-"use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.modelDeleteJournalEntryById = exports.modelUpdateJournalEntryById = exports.modelGetJournalEntryById = exports.modelGetJournalEntriesByUserId = exports.modelCreateJournalEntry = void 0;
-const client_dynamodb_1 = require("@aws-sdk/client-dynamodb");
-const lib_dynamodb_1 = require("@aws-sdk/lib-dynamodb");
-// Initialize DynamoDB client and document client
-const client = new client_dynamodb_1.DynamoDBClient({});
-const docClient = lib_dynamodb_1.DynamoDBDocumentClient.from(client);
+import { DescribeTableCommand } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand, UpdateCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import { dynamoDBClient } from '../config/db.js';
+// Create document client from the initialized DynamoDB client
+const docClient = DynamoDBDocumentClient.from(dynamoDBClient);
 // Create a new journal entry
-const modelCreateJournalEntry = (journalEntry) => __awaiter(void 0, void 0, void 0, function* () {
-    const command = new lib_dynamodb_1.PutCommand({
-        TableName: 'Journal-Entries',
-        Item: journalEntry,
-    });
-    yield docClient.send(command);
-});
-exports.modelCreateJournalEntry = modelCreateJournalEntry;
+export const modelCreateJournalEntry = async (journalEntry) => {
+    try {
+        console.log('Creating journal entry:', {
+            tableName: 'Journal-Entries',
+            userId: journalEntry.userId,
+            entryId: journalEntry.entryId
+        });
+        const command = new PutCommand({
+            TableName: 'Journal-Entries',
+            Item: journalEntry,
+        });
+        const result = await docClient.send(command);
+        console.log('Create result:', result);
+        return result;
+    }
+    catch (error) {
+        console.error('Create error details:', {
+            tableName: 'Journal-Entries',
+            journalEntry,
+            error
+        });
+        throw error;
+    }
+};
 // Get all journal entries for a specific user
-const modelGetJournalEntriesByUserId = (userId) => __awaiter(void 0, void 0, void 0, function* () {
-    const command = new lib_dynamodb_1.QueryCommand({
-        TableName: 'Journal-Entries',
-        KeyConditionExpression: 'userId = :userId',
-        ExpressionAttributeValues: {
-            ':userId': userId,
-        },
-    });
-    const { Items } = yield docClient.send(command);
-    return Items;
-});
-exports.modelGetJournalEntriesByUserId = modelGetJournalEntriesByUserId;
+export const modelGetJournalEntriesByUserId = async (userId) => {
+    try {
+        const command = new QueryCommand({
+            TableName: 'Journal-Entries',
+            KeyConditionExpression: 'userId = :userId',
+            ExpressionAttributeValues: {
+                ':userId': userId,
+            },
+        });
+        const { Items } = await docClient.send(command);
+        return Items;
+    }
+    catch (error) {
+        console.error('Error fetching journal entries:', error);
+        throw error;
+    }
+};
 // Get a specific journal entry by ID
-const modelGetJournalEntryById = (userId, entryId) => __awaiter(void 0, void 0, void 0, function* () {
-    const command = new lib_dynamodb_1.GetCommand({
-        TableName: 'Journal-Entries',
-        Key: { userId, entryId },
-    });
-    const { Item } = yield docClient.send(command);
-    return Item;
-});
-exports.modelGetJournalEntryById = modelGetJournalEntryById;
+export const modelGetJournalEntryById = async (userId, entryId) => {
+    try {
+        console.log('Getting journal entry:', { userId, entryId });
+        const command = new GetCommand({
+            TableName: 'Journal-Entries',
+            Key: { userId, entryId },
+        });
+        const { Item } = await docClient.send(command);
+        console.log('Found item:', Item);
+        return Item;
+    }
+    catch (error) {
+        console.error('Error getting journal entry:', error);
+        throw error;
+    }
+};
 // Update a journal entry by ID
-const modelUpdateJournalEntryById = (userId, entryId, updates) => __awaiter(void 0, void 0, void 0, function* () {
-    const command = new lib_dynamodb_1.UpdateCommand({
+export const modelUpdateJournalEntryById = async (userId, entryId, updates) => {
+    const command = new UpdateCommand({
         TableName: 'Journal-Entries',
         Key: { userId, entryId },
         UpdateExpression: `set 
@@ -93,23 +109,91 @@ const modelUpdateJournalEntryById = (userId, entryId, updates) => __awaiter(void
         ReturnValues: 'ALL_NEW',
     });
     try {
-        const { Attributes } = yield docClient.send(command);
+        const { Attributes } = await docClient.send(command);
         return Attributes;
     }
     catch (error) {
         console.error("Error updating journal entry:", error);
         throw error;
     }
-});
-exports.modelUpdateJournalEntryById = modelUpdateJournalEntryById;
+};
 // Delete a journal entry by ID
-const modelDeleteJournalEntryById = (userId, entryId) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(`Attempting to delete journal entry with userId: ${userId} and entryId: ${entryId}`);
-    const command = new lib_dynamodb_1.DeleteCommand({
-        TableName: 'Journal-Entries',
-        Key: { userId, entryId },
-    });
-    yield docClient.send(command);
-    console.log(`Successfully deleted entry with userId: ${userId} and entryId: ${entryId}`);
-});
-exports.modelDeleteJournalEntryById = modelDeleteJournalEntryById;
+export const modelDeleteJournalEntryById = async (userId, entryId) => {
+    try {
+        if (!userId || !entryId) {
+            throw new Error(`Missing required parameters: userId=${userId}, entryId=${entryId}`);
+        }
+        // First verify the entry exists
+        const getCommand = new GetCommand({
+            TableName: 'Journal-Entries',
+            Key: {
+                userId: userId,
+                entryId: entryId
+            }
+        });
+        const { Item } = await docClient.send(getCommand);
+        if (!Item) {
+            throw new Error(`Entry not found: userId=${userId}, entryId=${entryId}`);
+        }
+        const deleteCommand = new DeleteCommand({
+            TableName: 'Journal-Entries',
+            Key: {
+                userId: userId,
+                entryId: entryId
+            }
+        });
+        await docClient.send(deleteCommand);
+        return true;
+    }
+    catch (error) {
+        console.error('Delete operation failed:', {
+            operation: 'delete',
+            userId,
+            entryId,
+            error: error instanceof Error ? error.message : 'Unknown error'
+        });
+        throw error;
+    }
+};
+export const testDynamoDBOperations = async (userId, entryId) => {
+    try {
+        // Test Get
+        console.log('Testing Get...');
+        const getCommand = new GetCommand({
+            TableName: 'Journal-Entries',
+            Key: { userId, entryId }
+        });
+        const getResult = await docClient.send(getCommand);
+        console.log('Get Result:', getResult);
+        // Test Delete
+        console.log('Testing Delete...');
+        const deleteCommand = new DeleteCommand({
+            TableName: 'Journal-Entries',
+            Key: { userId, entryId }
+        });
+        const deleteResult = await docClient.send(deleteCommand);
+        console.log('Delete Result:', deleteResult);
+        return true;
+    }
+    catch (error) {
+        console.error('Test failed:', error);
+        throw error;
+    }
+};
+export const testTableStructure = async () => {
+    try {
+        const describeCommand = new DescribeTableCommand({
+            TableName: 'Journal-Entries'
+        });
+        const result = await dynamoDBClient.send(describeCommand);
+        if (result.Table) {
+            console.log('Table structure:', JSON.stringify(result.Table, null, 2));
+            return result.Table;
+        }
+        throw new Error('Table not found');
+    }
+    catch (error) {
+        console.error('Error describing table:', error);
+        throw error;
+    }
+};

@@ -51,16 +51,19 @@ export const createJournalEntry = async (req: Request, res: Response) => {
 export const getJournalEntriesByUserId = async (req: Request, res: Response) => {
   try {
     const user = req.user as { userId: string } | undefined;
+    
     if (!user?.userId) {
-      return res.status(401).json({ message: 'Unauthorized' });
+      return res.status(401).json({ message: 'Unauthorized - No user found' });
     }
 
-    const journals = await modelGetJournalEntriesByUserId(user.userId);
-    console.log('hello from get journal', journals)
-    res.status(200).json({ message: 'Journal entries fetched successfully', journals });
+    const entries = await modelGetJournalEntriesByUserId(user.userId);
+    return res.status(200).json({ journals: entries });
   } catch (error) {
-    console.error('Error fetching journal entries:', error);
-    res.status(500).json({ message: 'Failed to fetch journal entries', error });
+    console.error('Controller error:', error);
+    return res.status(500).json({ 
+      message: 'Error fetching journal entries',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 };
 
@@ -115,17 +118,49 @@ export const updateJournalEntryById = async (req: Request, res: Response) => {
 export const deleteJournalEntryById = async (req: Request, res: Response) => {
   try {
     const user = req.user as { userId: string } | undefined;
+    const { entryId } = req.params;
+
+    console.log('Delete request received:', { 
+      userId: user?.userId, 
+      entryId,
+      params: req.params,
+      url: req.url,
+      path: req.path,
+      baseUrl: req.baseUrl
+    });
+
     if (!user?.userId) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const { entryId } = req.params;
+    if (!entryId) {
+      console.log('Missing entryId in request');
+      return res.status(400).json({ message: 'Entry ID is required' });
+    }
 
-    await modelDeleteJournalEntryById(user.userId, entryId);
+    // First check if the journal exists
+    const journal = await modelGetJournalEntryById(user.userId, entryId);
 
-    res.status(200).json({ message: 'Journal entry deleted successfully' });
+    if (!journal) {
+      console.log('Journal entry not found:', { userId: user.userId, entryId });
+      return res.status(404).json({ message: 'Journal entry not found' });
+    }
+
+    // Delete the journal entry
+    const result = await modelDeleteJournalEntryById(user.userId, entryId);
+    
+    if (result) {
+      console.log('Successfully deleted journal entry:', { userId: user.userId, entryId });
+      return res.status(200).json({ message: 'Journal entry deleted successfully' });
+    } else {
+      console.log('Failed to delete journal entry:', { userId: user.userId, entryId });
+      return res.status(500).json({ message: 'Failed to delete journal entry' });
+    }
   } catch (error) {
-    console.error('Error deleting journal entry:', error);
-    res.status(500).json({ message: 'Failed to delete journal entry', error });
+    console.error('Delete error:', error);
+    return res.status(500).json({ 
+      message: 'Failed to delete journal entry',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 };

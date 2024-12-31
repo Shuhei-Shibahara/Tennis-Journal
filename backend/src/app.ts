@@ -2,14 +2,14 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import userRoutes from './routes/userRoutes';
-import authRoutes from './routes/authRoutes';
-import authMiddleware from './middlewares/authMiddleware';
-import journalRoutes from './routes/journalRoutes';
-import scraperRouter from './routes/scraper';
+import userRoutes from './routes/userRoutes.js';
+import authRoutes from './routes/authRoutes.js';
+import authMiddleware from './middlewares/authMiddleware.js';
+import journalRoutes from './routes/journals.js';
+import scraperRouter from './routes/scraper.js';
 
-dotenv.config(); // Load environment variables
+// Load environment variables first
+dotenv.config();
 
 const app = express();
 
@@ -26,14 +26,6 @@ app.use(cors(corsOptions));
 app.use(helmet({ contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false }));
 app.use(express.json());
 
-// Initialize DynamoDB client
-export const dynamoDBClient = new DynamoDBClient({ region: 'us-west-2' });
-
-// Define a simple route
-app.get('/', (req, res) => {
-  return res.send('Hello World!');
-});
-
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', authMiddleware, userRoutes);
@@ -45,3 +37,5 @@ const PORT = process.env.PORT || 5050;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+export default app;

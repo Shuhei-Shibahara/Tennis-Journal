@@ -28,8 +28,21 @@ export const authService = {
 
 export const journalService = {
   getEntries: async (userId: string) => {
-    const response = await api.get(`/api/journals/user/${userId}`);
-    return response.data.journals;
+    try {
+      if (!userId) {
+        throw new Error('User ID is required');
+      }
+
+      const response = await api.get(`/api/journals/user/${userId}`);
+      return response.data.journals;
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userId');
+        window.location.href = '/login';
+      }
+      throw error;
+    }
   },
 
   createEntry: async (data: Omit<JournalEntry, 'entryId'>) => {
@@ -43,8 +56,28 @@ export const journalService = {
   },
 
   deleteEntry: async (entryId: string) => {
-    const response = await api.delete(`/api/journals/${entryId}`);
-    return response.data;
+    if (!entryId) {
+      throw new Error('Entry ID is required for deletion');
+    }
+
+    try {
+      console.log('Attempting to delete entry:', { entryId, url: `/api/journals/${entryId}` });
+      const response = await api.delete(`/api/journals/${entryId}`);
+      
+      if (response.status === 200) {
+        console.log('Successfully deleted entry:', entryId);
+        return response.data;
+      }
+      throw new Error(response.data.message || 'Failed to delete entry');
+    } catch (error: any) {
+      console.error('Delete operation failed:', {
+        entryId,
+        error: error.response?.data?.message || error.message,
+        status: error.response?.status,
+        url: `/api/journals/${entryId}`
+      });
+      throw error;
+    }
   },
 };
 
