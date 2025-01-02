@@ -50,8 +50,18 @@ const App: React.FC = () => {
         <Route path="/" element={<Home />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={isLoggedIn ? <Navigate to="/journal" /> : <Login />} />
-        <Route path="/journal" element={isLoggedIn ? <JournalEntryForm /> : <Navigate to="/login" />} />
-        <Route path="/journal-entries" element={isLoggedIn ? <JournalEntries /> : <Navigate to="/login" />} /> {/* Changed to /journal-entries */}
+        <Route
+          path="/new-journal-entry"
+          element={isLoggedIn ? <JournalEntryForm /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/edit-journal-entry/:entryId"
+          element={isLoggedIn ? <JournalEntryForm mode="edit" /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/journal-entries"
+          element={isLoggedIn ? <JournalEntries /> : <Navigate to="/login" />}
+        />
       </Routes>
     </Router>
   );

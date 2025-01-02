@@ -5,6 +5,7 @@ import { JournalEntry } from '../types';
 import { COURT_SURFACES } from '../constants';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
+import { useNavigate } from 'react-router-dom';
 
 const JournalEntries: React.FC = () => {
   const { entries, error, loading, fetchEntries, deleteEntry } = useJournal();
@@ -18,6 +19,7 @@ const JournalEntries: React.FC = () => {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   // Use a ref to prevent multiple fetches
   const fetchedRef = React.useRef(false);
@@ -38,6 +40,7 @@ const JournalEntries: React.FC = () => {
 
   const handleEdit = (entry: JournalEntry) => {
     setEditingEntryId(entry.entryId);
+    navigate(`/edit-journal-entry/${entry.entryId}`, { state: { entry } });
   };
 
   const handleDelete = async (entryId: string) => {

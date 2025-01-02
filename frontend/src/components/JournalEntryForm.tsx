@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useSelector } from 'react-redux';
 import { LoadScript, GoogleMap, Marker, StandaloneSearchBox } from '@react-google-maps/api';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { RootState } from '../store';
 import { useJournal } from '../hooks/useJournal';
 import JournalFormFields from './shared/JournalFormFields';
@@ -11,11 +11,17 @@ import { MAP_DEFAULT_CENTER, MAP_CONTAINER_STYLE } from '../constants';
 import { JournalEntry } from '../types';
 import * as d3 from 'd3';
 
-const JournalEntryForm: React.FC = () => {
+interface JournalEntryFormProps {
+  mode?: 'create' | 'edit';
+}
+
+const JournalEntryForm: React.FC<JournalEntryFormProps> = ({ mode = 'create' }) => {
   const navigate = useNavigate();
-  const { createEntry } = useJournal();
+  const location = useLocation();
+  const { entryId } = useParams();
+  const { createEntry, updateEntry } = useJournal();
   const user = useSelector((state: RootState) => state.session.user);
-  const [location, setLocation] = useState(MAP_DEFAULT_CENTER);
+  const [mapLocation, setMapLocation] = useState<google.maps.LatLngLiteral>(MAP_DEFAULT_CENTER);
   const [searchBox, setSearchBox] = useState<google.maps.places.SearchBox | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -33,11 +39,27 @@ const JournalEntryForm: React.FC = () => {
   } = useForm<JournalEntry>();
   const currentResult = watch('result');
 
+  useEffect(() => {
+    if (mode === 'edit' && location.state?.entry) {
+      const entry = location.state.entry as JournalEntry;
+      Object.entries(entry).forEach(([key, value]) => {
+        setValue(key as keyof JournalEntry, value);
+      });
+      if (entry.stats) {
+        setStats(typeof entry.stats === 'string' ? JSON.parse(entry.stats) : entry.stats);
+      }
+      if (entry.location) {
+        // You might want to geocode the location string to get lat/lng
+        setMapLocation(MAP_DEFAULT_CENTER); // For now, just use default center
+      }
+    }
+  }, [mode, location.state, setValue]);
+
   const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
     if (place.geometry) {
       const lat = place.geometry.location?.lat() ?? MAP_DEFAULT_CENTER.lat;
       const lng = place.geometry.location?.lng() ?? MAP_DEFAULT_CENTER.lng;
-      setLocation({ lat, lng });
+      setMapLocation({ lat, lng });
       setValue('location', place.formatted_address || '');
     }
   };
@@ -64,19 +86,26 @@ const JournalEntryForm: React.FC = () => {
         throw new Error('User ID is missing');
       }
 
-      await createEntry({
+      const journalData = {
         ...data,
         userId: user.userId,
         stats: JSON.stringify(stats),
-      });
+      };
 
-      setSuccessMessage('Journal entry created successfully!');
+      if (mode === 'edit' && entryId) {
+        await updateEntry(entryId, journalData);
+        setSuccessMessage('Journal entry updated successfully!');
+      } else {
+        await createEntry(journalData);
+        setSuccessMessage('Journal entry created successfully!');
+      }
+
       reset();
       setTimeout(() => {
         navigate('/journal-entries');
       }, 2000);
     } catch (error) {
-      console.error('Error creating journal entry:', error);
+      console.error('Error saving journal entry:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -270,7 +299,7 @@ const JournalEntryForm: React.FC = () => {
       <div className="min-h-screen bg-gray-50 py-8 px-4">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-            Create New Journal Entry
+            {mode === 'edit' ? 'Edit Journal Entry' : 'Create New Journal Entry'}
           </h2>
 
           {successMessage && (
@@ -325,10 +354,10 @@ const JournalEntryForm: React.FC = () => {
                 <div className="mb-6 rounded-lg overflow-hidden border border-gray-300">
                   <GoogleMap
                     mapContainerStyle={MAP_CONTAINER_STYLE}
-                    center={location}
+                    center={mapLocation}
                     zoom={13}
                   >
-                    <Marker position={location} />
+                    <Marker position={mapLocation} />
                   </GoogleMap>
                 </div>
 
